@@ -22,6 +22,8 @@ export function Btn({ children, onClick, variant = "primary", disabled, classNam
       ? { background: `linear-gradient(135deg, ${COLORS.amber}, #fbbf24)`, color: "#0b0f1a" }
       : variant === "danger"
       ? { background: COLORS.coral, color: "#fff" }
+      : variant === "success"
+      ? { background: COLORS.emerald, color: "#06281d" }
       : variant === "ghost"
       ? { background: "transparent", border: `1px solid ${COLORS.border}`, color: COLORS.text }
       : { background: COLORS.surfaceAlt, color: COLORS.text };
@@ -32,11 +34,12 @@ export function Btn({ children, onClick, variant = "primary", disabled, classNam
   );
 }
 
-export function Chip({ label, active, onClick, color = COLORS.purple }) {
+export function Chip({ label, active, onClick, color = COLORS.purple, big }) {
   return (
     <button
       onClick={onClick}
-      className="rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-all active:scale-95"
+      aria-pressed={!!active}
+      className={`rounded-full border font-semibold transition-all active:scale-95 ${big ? "min-h-[44px] px-4 py-2 text-sm" : "px-3.5 py-1.5 text-xs"}`}
       style={{ borderColor: active ? color : COLORS.border, background: active ? `${color}22` : "transparent", color: active ? color : COLORS.muted }}
     >
       {label}
