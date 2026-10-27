@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useReducer } from "react";
 import {
   Users, Flame, Sparkles, Timer, Trophy, RefreshCw, Home, ArrowLeft, LogOut,
-  ChevronLeft, Check, Copy, Stethoscope, DoorOpen, Eye,
+  ChevronLeft, Check, Copy, Stethoscope, DoorOpen, Eye, ExternalLink,
 } from "lucide-react";
 import { COLORS, CATEGORIES, SPICE_LEVELS, GAME_DEFS } from "../../constants/theme";
 import { createRoomChannel, generateRoomCode, normalizeRoomCode, roomReducer, createInitialRoom } from "../../utils/roomSync";
@@ -46,6 +46,17 @@ export function HostLobby({ room, dispatch, roomCode, onExit }) {
           </button>
         </div>
         <p className="text-xs" style={{ color: COLORS.muted }}>סרקו את הקוד או הזינו אותו ידנית בטלפון כדי להצטרף</p>
+        {/* Opens the join screen (code already filled in) in a NEW tab, so this host tab, which holds the room, stays open.
+            Going "back" in this same tab would close the room, because the room only lives in this tab. */}
+        <a
+          href={joinUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-xs font-bold"
+          style={{ color: COLORS.text, background: COLORS.surfaceAlt, border: `1px solid ${COLORS.border}` }}
+        >
+          <ExternalLink size={14} /> הצטרפות כשחקן מהמכשיר הזה (נפתח בלשונית חדשה)
+        </a>
       </GlassCard>
 
       <div className="space-y-6">
