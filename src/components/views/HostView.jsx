@@ -82,22 +82,32 @@ export function HostLobby({ room, dispatch, roomCode, onExit }) {
         </section>
 
         <section>
-          <div className="mb-1 text-sm font-bold" style={{ color: COLORS.muted }}>אילו משחקים בתוכנית?</div>
-          <p className="mb-3 text-xs" style={{ color: COLORS.muted }}>משחק עם וי נמצא בתוכנית. לחיצה עליו מסירה אותו, ולחיצה נוספת מחזירה.</p>
-          <div className="grid grid-cols-1 gap-2.5 md:grid-cols-3">
+          <div className="mb-1 text-sm font-bold" style={{ color: COLORS.muted }}>אילו משחקים ישחקו הערב?</div>
+          <p className="mb-3 text-xs" style={{ color: COLORS.muted }}>
+            משחק מסומן ב-✓ ישוחק הערב. אפשר להסיר סימון ממשחק שלא רוצים. כשמוכנים, לוחצים על "התחילו את הערב" בתחתית המסך.
+          </p>
+          <div className="space-y-2.5">
             {GAME_DEFS.map((g) => {
-              const Icon = g.icon;
               const active = room.enabledGames.includes(g.id);
               return (
                 <button
                   key={g.id}
+                  role="checkbox"
+                  aria-checked={active}
                   onClick={() => toggleGame(g.id)}
-                  className="flex items-center gap-3 rounded-2xl border p-3.5 text-right transition-all active:scale-95"
+                  className="flex w-full items-center gap-3 rounded-2xl border p-3.5 text-right transition-all active:scale-[0.98]"
                   style={{ borderColor: active ? g.color : COLORS.border, background: active ? `${g.color}1a` : COLORS.surface }}
                 >
-                  <Icon size={20} color={active ? g.color : COLORS.muted} />
-                  <span className="text-sm font-bold" style={{ color: active ? COLORS.text : COLORS.muted }}>{g.title}</span>
-                  {active && <Check size={16} color={g.color} className="mr-auto" />}
+                  <span
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2"
+                    style={{ borderColor: active ? g.color : COLORS.muted, background: active ? g.color : "transparent" }}
+                  >
+                    {active && <Check size={16} color="#0b0f1a" strokeWidth={3} />}
+                  </span>
+                  <span className="flex-1">
+                    <span className="block text-sm font-bold" style={{ color: active ? COLORS.text : COLORS.muted }}>{g.title}</span>
+                    <span className="block text-xs" style={{ color: COLORS.muted }}>{g.desc}</span>
+                  </span>
                 </button>
               );
             })}
