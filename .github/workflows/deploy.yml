@@ -39,7 +39,9 @@ jobs:
           path: pages-branch
 
       - name: Replace the site files with the new build
-        run: rsync -a --delete --exclude='.git' dist/ pages-branch/
+        # -c compares file contents, not dates and sizes: a changed index.html with the same size
+        # was once skipped, which left the page pointing at deleted files (a blank site).
+        run: rsync -rc --delete --exclude='.git' dist/ pages-branch/
 
       - name: Commit and publish
         working-directory: pages-branch
