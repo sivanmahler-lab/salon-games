@@ -90,6 +90,11 @@ export function PlayerAlias({ room, dispatch, myId }) {
         <div className="text-lg font-black" style={{ color: COLORS.text }}>
           {isDescriber ? "התור שלך להסביר מתחיל עוד רגע!" : `התור של ${turnPlayer.name} להסביר מתחיל עוד רגע`}
         </div>
+        <p className="max-w-xs text-sm leading-relaxed" style={{ color: COLORS.muted }}>
+          {isDescriber
+            ? "תראו מילה על המסך. הסבירו אותה בעל פה בלי להגיד אותה, כדי שהאחרים ינחשו. כשניחשו נכון לחצו \"נכון\", ואם אין מושג לחצו \"דלג\". כל מילה נכונה שווה נקודה, ויש 60 שניות."
+            : "אתם מנחשים! המסביר/ה מתאר/ת מילה בלי להגיד אותה. צעקו תשובות בקול, והוא/היא יסמנו כשניחשתם."}
+        </p>
       </div>
     );
   }
@@ -131,7 +136,7 @@ export function PlayerAlias({ room, dispatch, myId }) {
           <Btn variant="subtle" onClick={() => advance(false)}><SkipForward size={18} /> דלג</Btn>
           <Btn variant="primary" onClick={() => advance(true)}><Target size={18} /> נכון! (+1)</Btn>
         </div>
-        <p className="text-xs" style={{ color: COLORS.muted }}>אפשר גם להחליק ימינה או שמאלה</p>
+        <p className="text-center text-xs leading-relaxed" style={{ color: COLORS.muted }}>הסבירו את המילה בקול בלי להגיד אותה. ניחשו נכון: "נכון". לא מצליחים: "דלג". אפשר גם להחליק ימינה (נכון) או שמאלה (דלג).</p>
       </div>
     );
   }
@@ -139,7 +144,7 @@ export function PlayerAlias({ room, dispatch, myId }) {
   return (
     <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
       <div className="text-3xl font-black" style={{ color: COLORS.amber }}>⏱ {a.timeLeft}</div>
-      <div className="text-lg font-black" style={{ color: COLORS.text }}>{turnPlayer.name} מסביר/ה — נחשו בקול!</div>
+      <div className="text-lg font-black" style={{ color: COLORS.text }}>{turnPlayer.name} מסביר/ה מילה. נחשו בקול מה המילה!</div>
       <div className="flex gap-6 text-sm font-bold">
         <span style={{ color: COLORS.emerald }}>✓ {a.correct} נכונות בתור הזה</span>
       </div>
