@@ -82,7 +82,8 @@ export function HostLobby({ room, dispatch, roomCode, onExit }) {
         </section>
 
         <section>
-          <div className="mb-3 text-sm font-bold" style={{ color: COLORS.muted }}>אילו משחקים בתוכנית?</div>
+          <div className="mb-1 text-sm font-bold" style={{ color: COLORS.muted }}>אילו משחקים בתוכנית?</div>
+          <p className="mb-3 text-xs" style={{ color: COLORS.muted }}>משחק עם וי נמצא בתוכנית. לחיצה עליו מסירה אותו, ולחיצה נוספת מחזירה.</p>
           <div className="grid grid-cols-1 gap-2.5 md:grid-cols-3">
             {GAME_DEFS.map((g) => {
               const Icon = g.icon;
@@ -135,7 +136,7 @@ export function HostLobby({ room, dispatch, roomCode, onExit }) {
   );
 }
 
-export function HostHub({ room, dispatch, onPodium }) {
+export function HostHub({ room, dispatch, onPodium, onLobby }) {
   const games = GAME_DEFS.filter((g) => room.enabledGames.includes(g.id));
   const anyScore = room.players.some((p) => p.score > 0 || p.correct > 0 || p.skips > 0 || p.diagnosed > 0);
   return (
@@ -169,6 +170,9 @@ export function HostHub({ room, dispatch, onPodium }) {
       </div>
       <div className="mt-6">
         <Btn full variant="gold" disabled={!anyScore} onClick={onPodium}><Trophy size={18} /> לוח התוצאות</Btn>
+      </div>
+      <div className="mt-3">
+        <Btn full variant="ghost" onClick={onLobby}>חזרה להגדרות הערב (להוסיף או להסיר משחקים)</Btn>
       </div>
     </div>
   );
@@ -397,7 +401,7 @@ export default function HostApp({ onExit }) {
   return (
     <>
       {room.screen === "lobby" && <HostLobby room={room} dispatch={localDispatch} roomCode={roomCode} onExit={onExit} />}
-      {room.screen === "hub" && <HostHub room={room} dispatch={localDispatch} onPodium={() => localDispatch({ type: "GO_PODIUM" })} />}
+      {room.screen === "hub" && <HostHub room={room} dispatch={localDispatch} onPodium={() => localDispatch({ type: "GO_PODIUM" })} onLobby={() => localDispatch({ type: "BACK_TO_LOBBY" })} />}
       {room.screen === "whoami" && <HostWhoAmI room={room} dispatch={localDispatch} onBack={backToHub} />}
       {room.screen === "shrink" && <HostShrink room={room} dispatch={localDispatch} onBack={backToHub} />}
       {room.screen === "alias" && <HostAlias room={room} dispatch={localDispatch} onBack={backToHub} />}

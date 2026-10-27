@@ -127,6 +127,8 @@ export function roomReducer(room, action) {
       return { ...room, screen: "hub", paused: false };
     case "GO_PODIUM":
       return { ...room, screen: "podium", paused: false };
+    case "BACK_TO_LOBBY": // from the games list back to the evening's settings (to add or remove games)
+      return { ...room, screen: "lobby", paused: false };
     case "SET_PAUSED":
       return { ...room, paused: !!action.value };
     case "PLAY_AGAIN": {
