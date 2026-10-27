@@ -4,9 +4,10 @@ import { GlowBG } from "./components/common/UIComponents";
 import EntryScreen from "./components/views/EntryScreen";
 import HostApp from "./components/views/HostView";
 import PlayerApp from "./components/views/PlayerView";
+import SoloApp from "./components/solo/SoloApp";
 
 export default function App() {
-  const [mode, setMode] = useState("entry"); // entry | host | player
+  const [mode, setMode] = useState("entry"); // entry | host | player | solo
   const [joinInfo, setJoinInfo] = useState(null);
   const [prefillCode] = useState(() => {
     if (typeof window === "undefined") return "";
@@ -36,6 +37,7 @@ export default function App() {
         <EntryScreen
           prefillCode={prefillCode}
           onHost={() => setMode("host")}
+          onSolo={() => setMode("solo")}
           onJoin={(info) => {
             setJoinInfo(info);
             setMode("player");
@@ -43,6 +45,7 @@ export default function App() {
         />
       )}
       {mode === "host" && <HostApp onExit={exitToEntry} />}
+      {mode === "solo" && <SoloApp onExit={exitToEntry} />}
       {mode === "player" && joinInfo && <PlayerApp {...joinInfo} onExit={exitToEntry} />}
     </div>
   );

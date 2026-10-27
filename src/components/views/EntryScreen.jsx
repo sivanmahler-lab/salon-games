@@ -1,9 +1,9 @@
 import React, { useState } from "react";
-import { QrCode, Wifi } from "lucide-react";
+import { QrCode, Smartphone, Wifi } from "lucide-react";
 import { COLORS, TRAIT_TAGS } from "../../constants/theme";
 import { Logo, GlassCard, Chip, Btn } from "../common/UIComponents";
 
-export default function EntryScreen({ onHost, onJoin, prefillCode }) {
+export default function EntryScreen({ onHost, onJoin, onSolo, prefillCode }) {
   const [sub, setSub] = useState(prefillCode ? "join" : "choose");
   const [code, setCode] = useState(prefillCode || "");
   const [name, setName] = useState("");
@@ -64,6 +64,7 @@ export default function EntryScreen({ onHost, onJoin, prefillCode }) {
       <div className="w-full space-y-3">
         <Btn full variant="primary" onClick={onHost}><QrCode size={18} /> אירוח ערב — המסך הראשי</Btn>
         <Btn full variant="gold" onClick={() => setSub("join")}><Wifi size={18} /> הצטרפות מהטלפון שלי</Btn>
+        <Btn full variant="ghost" onClick={onSolo}><Smartphone size={18} /> טלפון אחד באמצע החדר</Btn>
       </div>
       <p className="text-[11px]" style={{ color: COLORS.muted }}>
         לבדיקה מקומית: פתחו את שני המצבים בכרטיסיות שונות באותו דפדפן — הם מתסנכרנים באופן מיידי.
