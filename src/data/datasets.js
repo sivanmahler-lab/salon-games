@@ -1,5 +1,5 @@
 import { TRAIT_TAGS } from "../constants/theme";
-import { WHO } from "./salonContent";
+import { ALL_CHARACTERS } from "./hostCharacters";
 
 /* ============================================================================
    Content datasets — fully local, no external API required.
@@ -96,12 +96,10 @@ export function fieldAwarePool(templates, player, safePool) {
   return shuffle([...usable, ...safePool]);
 }
 
-// "Who am I": real, recognizable characters (famous Israelis, film and TV characters, animals), in random order.
-// Foods, places and professions are left out here: they are not characters someone can "be".
-export const CHARACTER_TOPICS = ["ישראלים מפורסמים", "דמויות מסרטים וסדרות", "חיות"];
-
+// "Who am I" in the hosted game: well-known people and characters (singers, politicians, athletes,
+// actors, broadcasters, cartoon characters), from Israel and abroad, in random order.
 export function buildCharacters() {
-  return shuffle(CHARACTER_TOPICS.flatMap((topic) => WHO[topic]));
+  return shuffle(ALL_CHARACTERS);
 }
 
 export function buildShrinkPool(players) {

@@ -14,12 +14,10 @@ import { Podium } from "./Podium";
 
 export function HostLobby({ room, dispatch, roomCode, onExit }) {
   const setConfig = (patch) => dispatch({ type: "SET_CONFIG", patch });
-  const toggleGame = (id) =>
-    setConfig({ enabledGames: room.enabledGames.includes(id) ? room.enabledGames.filter((g) => g !== id) : [...room.enabledGames, id] });
 
   const joinUrl = typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(roomCode)}` : roomCode;
   const [copied, setCopied] = useState(false);
-  const canStart = room.players.length >= 3 && room.enabledGames.length >= 1;
+  const canStart = room.players.length >= 3;
 
   return (
     <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-5 pb-12 pt-8 md:max-w-2xl">
@@ -82,35 +80,23 @@ export function HostLobby({ room, dispatch, roomCode, onExit }) {
         </section>
 
         <section>
-          <div className="mb-1 text-sm font-bold" style={{ color: COLORS.muted }}>אילו משחקים ישחקו הערב?</div>
+          <div className="mb-1 text-sm font-bold" style={{ color: COLORS.muted }}>המשחקים שישוחקו הערב</div>
           <p className="mb-3 text-xs" style={{ color: COLORS.muted }}>
-            משחק מסומן ב-✓ ישוחק הערב. אפשר להסיר סימון ממשחק שלא רוצים. כשמוכנים, לוחצים על "התחילו את הערב" בתחתית המסך.
+            כל המשחקים האלה ישוחקו הערב. כשמוכנים, לוחצים על "התחילו את הערב" בתחתית המסך.
           </p>
           <div className="space-y-2.5">
-            {GAME_DEFS.map((g) => {
-              const active = room.enabledGames.includes(g.id);
-              return (
-                <button
-                  key={g.id}
-                  role="checkbox"
-                  aria-checked={active}
-                  onClick={() => toggleGame(g.id)}
-                  className="flex w-full items-center gap-3 rounded-2xl border p-3.5 text-right transition-all active:scale-[0.98]"
-                  style={{ borderColor: active ? g.color : COLORS.border, background: active ? `${g.color}1a` : COLORS.surface }}
-                >
-                  <span
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md border-2"
-                    style={{ borderColor: active ? g.color : COLORS.muted, background: active ? g.color : "transparent" }}
-                  >
-                    {active && <Check size={16} color="#0b0f1a" strokeWidth={3} />}
-                  </span>
-                  <span className="flex-1">
-                    <span className="block text-sm font-bold" style={{ color: active ? COLORS.text : COLORS.muted }}>{g.title}</span>
-                    <span className="block text-xs" style={{ color: COLORS.muted }}>{g.desc}</span>
-                  </span>
-                </button>
-              );
-            })}
+            {GAME_DEFS.map((g) => (
+              <div
+                key={g.id}
+                className="flex w-full items-center gap-3 rounded-2xl border p-3.5 text-right"
+                style={{ borderColor: g.color, background: `${g.color}1a` }}
+              >
+                <span className="flex-1">
+                  <span className="block text-sm font-bold" style={{ color: COLORS.text }}>{g.title}</span>
+                  <span className="block text-xs" style={{ color: COLORS.muted }}>{g.desc}</span>
+                </span>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -140,7 +126,7 @@ export function HostLobby({ room, dispatch, roomCode, onExit }) {
         <Btn full variant="primary" disabled={!canStart} onClick={() => dispatch({ type: "START_HUB" })}>
           <Sparkles size={18} /> התחילו את הערב
         </Btn>
-        {!canStart && <p className="mt-2 text-center text-[11px]" style={{ color: COLORS.muted }}>נדרשים 3 שחקנים מחוברים לפחות ומשחק אחד פעיל</p>}
+        {!canStart && <p className="mt-2 text-center text-[11px]" style={{ color: COLORS.muted }}>נדרשים 3 שחקנים מחוברים לפחות</p>}
       </div>
     </div>
   );
