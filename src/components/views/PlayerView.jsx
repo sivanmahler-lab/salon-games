@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Timer, Trophy, ThumbsUp, SkipForward, Target, Stethoscope, Lightbulb, Award, Sparkles, Wifi, WifiOff } from "lucide-react";
+import { Timer, Trophy, ThumbsUp, SkipForward, Target, Stethoscope, Lightbulb, Award, Sparkles, Wifi, WifiOff, Pause } from "lucide-react";
 import { COLORS } from "../../constants/theme";
 import { createRoomChannel, generateId, normalizeRoomCode } from "../../utils/roomSync";
 import { Btn, GlassCard, Avatar, Logo, PartyCard } from "../common/UIComponents";
@@ -250,7 +250,7 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
             <WifiOff size={32} color={COLORS.coral} />
             <div className="text-sm font-bold" style={{ color: COLORS.text }}>לא הצלחנו להתחבר</div>
             <p className="text-xs" style={{ color: COLORS.muted }}>
-              ודאו שקוד החדר נכון וכי מסך המנחה פתוח — שימו לב: כרגע החיבור עובד רק בין כרטיסיות של אותו דפדפן, לא בין מכשירים נפרדים.
+              ודאו שקוד החדר נכון, שמסך המנחה פתוח ושהאינטרנט עובד, ונסו שוב.
             </p>
             <Btn variant="ghost" onClick={onExit}>חזרה</Btn>
           </>
@@ -259,6 +259,30 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
     );
   }
 
+  return (
+    <>
+      <PlayerScreen room={room} dispatch={dispatch} myId={myId} name={name} />
+      {room.paused && <PausedOverlay />}
+    </>
+  );
+}
+
+// Covers the whole screen on every phone while the host has pressed PAUSE.
+export function PausedOverlay() {
+  return (
+    <div
+      role="alert"
+      className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 px-6 text-center"
+      style={{ background: "rgba(9,13,22,0.97)" }}
+    >
+      <Pause size={56} color={COLORS.amber} />
+      <div className="text-2xl font-black" style={{ color: COLORS.amber }}>המנחה לחץ PAUSE</div>
+      <p className="text-sm" style={{ color: COLORS.muted }}>המשחק מושהה והשעון עומד. ממתינים שהמנחה ימשיך.</p>
+    </div>
+  );
+}
+
+function PlayerScreen({ room, dispatch, myId, name }) {
   if (room.screen === "lobby") return <PlayerWaiting room={room} myName={name} label="ממתינים שהמנחה יתחיל את הערב..." />;
   if (room.screen === "hub") return <PlayerWaiting room={room} myName={name} label="המנחה בוחר/ת משחק..." />;
   if (room.screen === "whoami") return <PlayerWhoAmI room={room} dispatch={dispatch} myId={myId} />;

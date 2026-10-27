@@ -25,12 +25,6 @@ export const CATEGORIES = [
   { id: "friends", label: "ערב חברים", icon: Users },
 ];
 
-export const SPICE_LEVELS = [
-  { id: 1, label: "מתוק ומשפחתי", desc: "עדין, מתאים לכולם", color: COLORS.emerald },
-  { id: 2, label: "עוקצני במידה", desc: "קצת עקיצות, בלי לפגוע", color: COLORS.amber },
-  { id: 3, label: "רוסט מלא", desc: "בלי רחמים", color: COLORS.coral },
-];
-
 export const TRAIT_TAGS = [
   "תמיד מאחר/ת", "מסור/ה לקפה", "מלך/ת המנגל", "בדיחות אבא",
   "חופר/ת בווייז", "שוכח/ת מפתחות", "מדבר/ת עם הידיים", "בוכה/ה בסרטים",

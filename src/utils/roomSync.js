@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { GAME_DEFS } from "../constants/theme";
-import { shuffle, buildPersonas, buildShrinkPool, buildAliasDeck } from "../data/datasets";
+import { shuffle, buildCharacters, buildShrinkPool, buildAliasDeck } from "../data/datasets";
 
 /* ----------------------------------------------------------------------------
    ROOM SYNC ADAPTER
@@ -99,7 +99,7 @@ export function createInitialRoom() {
   return {
     screen: "lobby", // lobby | hub | whoami | shrink | alias | podium
     category: "friends",
-    spice: 2,
+    paused: false, // the host pressed PAUSE: the clock stops and every screen says so
     enabledGames: GAME_DEFS.map((g) => g.id),
     players: [],
     whoami: null,
@@ -124,17 +124,20 @@ export function roomReducer(room, action) {
     case "START_HUB":
       return room.players.length >= 3 ? { ...room, screen: "hub" } : room;
     case "BACK_TO_HUB":
-      return { ...room, screen: "hub" };
+      return { ...room, screen: "hub", paused: false };
     case "GO_PODIUM":
-      return { ...room, screen: "podium" };
+      return { ...room, screen: "podium", paused: false };
+    case "SET_PAUSED":
+      return { ...room, paused: !!action.value };
     case "PLAY_AGAIN": {
       const players = room.players.map((p) => ({ ...p, score: 0, correct: 0, skips: 0, diagnosed: 0 }));
-      return { ...room, players, screen: "hub", whoami: null, shrink: null, alias: null };
+      return { ...room, players, screen: "hub", paused: false, whoami: null, shrink: null, alias: null };
     }
 
     case "START_GAME": {
+      room = { ...room, paused: false };
       if (action.game === "whoami") {
-        return { ...room, screen: "whoami", whoami: startTurnGameState(room.players, shuffle(buildPersonas(room.players, room.spice))) };
+        return { ...room, screen: "whoami", whoami: startTurnGameState(room.players, buildCharacters()) };
       }
       if (action.game === "alias") {
         return { ...room, screen: "alias", alias: startTurnGameState(room.players, shuffle(buildAliasDeck(room.players))) };
@@ -160,7 +163,7 @@ export function roomReducer(room, action) {
     case "TICK": {
       const key = action.game;
       const g = room[key];
-      if (!g || g.phase !== "playing") return room;
+      if (!g || g.phase !== "playing" || room.paused) return room; // the clock waits while paused
       const timeLeft = g.timeLeft - 1;
       if (timeLeft <= 0) {
         const turnPlayer = room.players[g.turnIdx];
@@ -174,7 +177,7 @@ export function roomReducer(room, action) {
     case "RESULT": {
       const key = action.game;
       const g = room[key];
-      if (!g || g.phase !== "playing" || action.cursor !== g.cursor) return room; // stale/duplicate tap guard
+      if (!g || g.phase !== "playing" || room.paused || action.cursor !== g.cursor) return room; // stale/duplicate tap guard
       const correct = g.correct + (action.result === "correct" ? 1 : 0);
       const skips = g.skips + (action.result === "skip" ? 1 : 0);
       const cursor = (g.cursor + 1) % g.deck.length;

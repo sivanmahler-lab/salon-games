@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useReducer } from "react";
 import {
-  Users, Flame, Sparkles, Timer, Trophy, RefreshCw, Home, ArrowLeft, LogOut,
-  ChevronLeft, Check, Copy, Stethoscope, DoorOpen, Eye, ExternalLink,
+  Users, Sparkles, Timer, Trophy, RefreshCw, Home, ArrowLeft, LogOut,
+  ChevronLeft, Check, Copy, Stethoscope, DoorOpen, Eye, ExternalLink, Pause, Play,
 } from "lucide-react";
-import { COLORS, CATEGORIES, SPICE_LEVELS, GAME_DEFS } from "../../constants/theme";
+import { COLORS, CATEGORIES, GAME_DEFS } from "../../constants/theme";
 import { createRoomChannel, generateRoomCode, normalizeRoomCode, roomReducer, createInitialRoom } from "../../utils/roomSync";
 import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar } from "../common/UIComponents";
 import { Podium } from "./Podium";
@@ -75,33 +75,6 @@ export function HostLobby({ room, dispatch, roomCode, onExit }) {
                 >
                   <Icon size={22} color={active ? COLORS.purple : COLORS.muted} />
                   <span className="text-xs font-bold" style={{ color: active ? COLORS.text : COLORS.muted }}>{c.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-3 text-sm font-bold" style={{ color: COLORS.muted }}>רמת חריפות</div>
-          <div className="space-y-2.5">
-            {SPICE_LEVELS.map((s) => {
-              const active = room.spice === s.id;
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => setConfig({ spice: s.id })}
-                  className="flex w-full items-center justify-between rounded-2xl border p-3.5 text-right transition-all active:scale-95"
-                  style={{ borderColor: active ? s.color : COLORS.border, background: active ? `${s.color}1a` : COLORS.surface }}
-                >
-                  <div>
-                    <div className="font-bold" style={{ color: active ? s.color : COLORS.text }}>{s.label}</div>
-                    <div className="text-xs" style={{ color: COLORS.muted }}>{s.desc}</div>
-                  </div>
-                  <div className="flex gap-1">
-                    {Array.from({ length: 3 }).map((_, i) => (
-                      <Flame key={i} size={15} color={i < s.id ? s.color : COLORS.border} fill={i < s.id ? s.color : "none"} />
-                    ))}
-                  </div>
                 </button>
               );
             })}
@@ -223,6 +196,15 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
 
       {g.phase === "playing" && (
         <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
+          {room.paused ? (
+            <div className="flex w-full flex-col items-center gap-3 rounded-2xl border-2 p-5" style={{ borderColor: COLORS.amber, background: `${COLORS.amber}1a` }}>
+              <div className="text-lg font-black" style={{ color: COLORS.amber }}>⏸ המשחק מושהה</div>
+              <p className="text-xs" style={{ color: COLORS.muted }}>בכל הטלפונים מופיע שלחצת PAUSE והשעון עומד.</p>
+              <Btn variant="gold" onClick={() => dispatch({ type: "SET_PAUSED", value: false })}><Play size={18} /> המשך</Btn>
+            </div>
+          ) : (
+            <Btn variant="subtle" onClick={() => dispatch({ type: "SET_PAUSED", value: true })}><Pause size={18} /> PAUSE</Btn>
+          )}
           <div className="flex w-full items-center justify-center gap-6 text-sm font-bold">
             <span style={{ color: COLORS.emerald }}>✓ {g.correct}</span>
             <span style={{ color: COLORS.coral }}>⏭ {g.skips}</span>
@@ -405,7 +387,7 @@ export default function HostApp({ onExit }) {
 
   useEffect(() => {
     const activeKey = ["whoami", "alias"].find((k) => room.screen === k && room[k]?.phase === "playing");
-    if (!activeKey) return;
+    if (!activeKey || room.paused) return;
     const t = setTimeout(() => localDispatch({ type: "TICK", game: activeKey }), 1000);
     return () => clearTimeout(t);
   }, [room]);
