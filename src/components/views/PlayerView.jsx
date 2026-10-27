@@ -73,10 +73,6 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
     <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-6">
       <div className="text-center text-lg font-black" style={{ color: COLORS.amber }}>⏱ {w.timeLeft}</div>
       <PartyCard big stampColor={COLORS.purple} stampLabel="מי אני?">{w.deck[w.cursor]}</PartyCard>
-      <div className="grid w-full grid-cols-2 gap-3">
-        <Btn variant="danger" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "skip", cursor: w.cursor })}><SkipForward size={18} /> דלג</Btn>
-        <Btn variant="primary" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "correct", cursor: w.cursor })}><ThumbsUp size={18} /> הצליח/ה!</Btn>
-      </div>
     </div>
   );
 }
@@ -166,29 +162,21 @@ export function PlayerShrink({ room, dispatch, myId }) {
 
   if (isPsych) {
     if (s.phase === "diagnose") {
-      const others = room.players.filter((p) => p.id !== myId);
       return (
-        <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-5 pb-10 pt-8">
-          <div className="mb-4 text-center text-lg font-black" style={{ color: COLORS.text }}>לוח האבחון שלך</div>
-          <p className="mb-4 text-center text-xs" style={{ color: COLORS.muted }}>לכל שחקן/ית אפשר לבקש רמז (מוריד נקודה) ואז לנסות לאבחן.</p>
-          <div className="space-y-3">
-            {others.map((p, i) => (
-              <GlassCard key={p.id} className={s.diagnosed[p.id] ? "opacity-60" : ""}>
-                <div className="mb-2 flex items-center gap-3">
-                  <Avatar index={i} name={p.name} />
-                  <span className="flex-1 font-black" style={{ color: COLORS.text }}>{p.name}</span>
-                  <span className="text-xs" style={{ color: COLORS.muted }}>רמזים: {s.clues[p.id]}</span>
-                </div>
-                <div className="flex gap-2">
-                  <Btn variant="subtle" className="flex-1" disabled={s.diagnosed[p.id]} onClick={() => dispatch({ type: "SHRINK_CLUE", id: p.id })}><Lightbulb size={16} /> רמז</Btn>
-                  <Btn variant="primary" className="flex-1" disabled={s.diagnosed[p.id]} onClick={() => dispatch({ type: "SHRINK_DIAGNOSE", id: p.id })}><Award size={16} /> {s.diagnosed[p.id] ? "אובחן/ה" : "לחשוף אבחנה"}</Btn>
-                </div>
-              </GlassCard>
-            ))}
+        <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-6 text-center">
+          <Stethoscope size={40} color={COLORS.emerald} />
+          <div className="text-xl font-black leading-relaxed" style={{ color: COLORS.text }}>
+            התור שלך! עליך לגלות את הכלל
           </div>
-          <div className="mt-6">
-            <Btn full variant="primary" onClick={() => dispatch({ type: "SHRINK_FINISH" })}><Trophy size={18} /> סיום הסיבוב</Btn>
+          <p className="text-sm leading-relaxed" style={{ color: COLORS.muted }}>
+            שאלו שאלות את מי שתרצו משאר השחקנים. כולם מתנהגים לפי אותו כלל סודי, ואתם צריכים לנחש מה הוא.
+          </p>
+          <div className="text-xs" style={{ color: COLORS.muted }}>רמזים שנוצלו: {s.clues}</div>
+          <div className="grid w-full grid-cols-2 gap-3">
+            <Btn variant="subtle" disabled={s.found} onClick={() => dispatch({ type: "SHRINK_CLUE" })}><Lightbulb size={16} /> רמז</Btn>
+            <Btn variant="primary" disabled={s.found} onClick={() => dispatch({ type: "SHRINK_DIAGNOSE" })}><Award size={16} /> {s.found ? "גיליתי!" : "גיליתי את הכלל"}</Btn>
           </div>
+          <Btn full variant="primary" onClick={() => dispatch({ type: "SHRINK_FINISH" })}><Trophy size={18} /> סיום הסיבוב</Btn>
         </div>
       );
     }
@@ -197,19 +185,19 @@ export function PlayerShrink({ room, dispatch, myId }) {
         <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
           <Trophy size={44} color={COLORS.amber} />
           <div className="text-lg font-black" style={{ color: COLORS.text }}>סיימת עם {s.totalScore} נקודות!</div>
+          <p className="text-sm" style={{ color: COLORS.muted }}>הכלל היה: {s.rule}</p>
           <p className="text-sm" style={{ color: COLORS.muted }}>ממתינים שהמנחה יעביר את כולם למרכז המשחקים...</p>
         </div>
       );
     }
   }
 
-  // patient
-  const myRule = s.rules?.[myId];
+  // everyone else follows the same rule
   return (
     <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-6">
-      <div className="text-center text-sm font-bold" style={{ color: COLORS.muted }}>הכלל הסודי שלך — אף אחד אחר לא רואה את זה</div>
-      <PartyCard stampColor={COLORS.emerald} stampLabel="הכלל הסודי שלך">{myRule || "מחכים שהמנחה יקצה כלל..."}</PartyCard>
-      <p className="text-xs" style={{ color: COLORS.muted }}>פעלו לפי הכלל הזה בלי לחשוף אותו — הפסיכולוג/ית ינסה/תנסה לגלות</p>
+      <div className="text-center text-sm font-bold" style={{ color: COLORS.muted }}>הכלל הסודי של כולם. אל תגלו אותו, תנו לפסיכולוג/ית לנחש</div>
+      <PartyCard stampColor={COLORS.emerald} stampLabel="הכלל הסודי">{s.rule || "מחכים שהמנחה יתחיל..."}</PartyCard>
+      <p className="text-xs" style={{ color: COLORS.muted }}>כשהפסיכולוג/ית שואל/ת אתכם שאלה, ענו לפי הכלל הזה בלי לחשוף אותו</p>
     </div>
   );
 }

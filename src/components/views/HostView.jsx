@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useReducer } from "react";
 import {
   Users, Sparkles, Timer, Trophy, RefreshCw, Home, ArrowLeft, LogOut,
-  ChevronLeft, Check, Copy, Stethoscope, DoorOpen, Eye, ExternalLink, Pause, Play,
+  ChevronLeft, Check, Copy, Stethoscope, DoorOpen, Eye, ExternalLink, Pause, Play, SkipForward, ThumbsUp,
 } from "lucide-react";
 import { COLORS, CATEGORIES, GAME_DEFS } from "../../constants/theme";
 import { createRoomChannel, generateRoomCode, normalizeRoomCode, roomReducer, createInitialRoom } from "../../utils/roomSync";
@@ -212,6 +212,12 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
           <div style={{ background: `${color}22`, borderColor: color }} className="w-full rounded-2xl border-2 border-dashed p-8">
             <div className="text-lg font-black" style={{ color: COLORS.text }}>{playingCopy(turnPlayer.name)}</div>
           </div>
+          {gameKey === "whoami" && !room.paused && (
+            <div className="grid w-full grid-cols-2 gap-3">
+              <Btn variant="danger" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "skip", cursor: g.cursor })}><SkipForward size={18} /> דלג</Btn>
+              <Btn variant="primary" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "correct", cursor: g.cursor })}><ThumbsUp size={18} /> הצליח/ה!</Btn>
+            </div>
+          )}
           <p className="text-xs" style={{ color: COLORS.muted }}>{stampLabel}</p>
         </div>
       )}
@@ -246,8 +252,8 @@ export function HostWhoAmI({ room, dispatch, onBack }) {
       helpSteps={[
         "כל תור שייך לשחקן/ית אחד/ת — עכשיו זה מי שמוצג/ת למעלה.",
         "כשהתור מתחיל, הדמות הסודית מוצגת רק בטלפונים של שאר השחקנים — לא כאן ולא אצל המנחש/ת.",
-        "שאר השחקנים מתארים במילים, והמנחש/ת עונה בקול. מי שרואה את הכרטיס לוחץ/ת בטלפון שלו/ה 'הצליח/ה!' או 'דלג'.",
-        "המסך הזה רק עוקב אחרי הזמן והניקוד — אין עליו כפתורי ניחוש.",
+        "שאר השחקנים מתארים במילים, והמנחש/ת עונה בקול. המנחה לוחץ/ת כאן במסך על 'הצליח/ה!' או 'דלג'.",
+        "כפתורי 'הצליח/ה!' ו'דלג' נמצאים רק במסך המנחה, לא בטלפונים.",
       ]}
       readyCopy={(name) => `${name} לא יראה/תראה שום דבר במסך שלו/ה. שאר השחקנים יראו את הדמות בטלפונים שלהם ויתארו אותה.`}
       playingCopy={(name) => `ממתינים ש${name} ינחש/תנחש...`}
@@ -291,9 +297,9 @@ export function HostShrink({ room, dispatch, onBack }) {
         helpTitle="איך משחקים ב'הפסיכולוג' (מסך מנחה)"
         helpSteps={[
           "בחרו מי יהיה/תהיה הפסיכולוג/ית הערב מתוך רשימת השחקנים.",
-          "לחיצה על 'הקצו כללים' שולחת לכל שאר השחקנים, בסודיות מלאה, כלל התנהגות משלהם — ישירות לטלפון שלהם.",
-          "הפסיכולוג/ית מקבל/ת בטלפון שלו/ה לוח אבחון עם כפתורי רמז ואבחנה לכל שחקן/ית.",
-          "הניקוד נספר אוטומטית לפי כמות הרמזים שהפסיכולוג/ית השתמש/ה בהם.",
+          "לחיצה על 'הקצו כללים' שולחת לכל שאר השחקנים את אותו כלל סודי, ישירות לטלפון שלהם.",
+          "הפסיכולוג/ית מקבל/ת הודעה שעליו/ה לגלות את הכלל בשאלות לשחקנים, עם כפתורי רמז וגילוי.",
+          "הניקוד נספר אוטומטית לפי כמות הרמזים שנוצלו.",
         ]}
       />
 
@@ -328,16 +334,9 @@ export function HostShrink({ room, dispatch, onBack }) {
         <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
           <Eye size={44} color={COLORS.amber} />
           <div className="text-xl font-black" style={{ color: COLORS.text }}>{psych?.name} מאבחן/ת עכשיו</div>
-          <p className="text-sm" style={{ color: COLORS.muted }}>הכללים הסודיים כבר נמצאים בטלפונים של {others.map((p) => p.name).join(", ")}</p>
-          <div className="w-full space-y-2">
-            {others.map((p, i) => (
-              <div key={p.id} className="flex items-center gap-3 rounded-2xl border p-3 text-right" style={{ borderColor: COLORS.border, background: COLORS.surface }}>
-                <Avatar index={i} name={p.name} />
-                <span className="flex-1 font-bold" style={{ color: COLORS.text }}>{p.name}</span>
-                <span className="text-xs" style={{ color: COLORS.muted }}>רמזים: {s.clues[p.id]}</span>
-                {s.diagnosed[p.id] && <Check size={16} color={COLORS.emerald} />}
-              </div>
-            ))}
+          <p className="text-sm" style={{ color: COLORS.muted }}>כל השחקנים מלבדו/ה ({others.map((p) => p.name).join(", ")}) קיבלו את אותו כלל סודי, והוא/היא צריך/ה לגלות אותו בשאלות.</p>
+          <div className="flex items-center gap-2 text-sm font-bold" style={{ color: COLORS.muted }}>
+            רמזים: {s.clues} {s.found && <Check size={16} color={COLORS.emerald} />}
           </div>
         </div>
       )}
@@ -346,6 +345,7 @@ export function HostShrink({ room, dispatch, onBack }) {
         <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
           <Trophy size={48} color={COLORS.amber} />
           <div className="text-xl font-black" style={{ color: COLORS.text }}>{psych?.name} סיים/ה עם {s.totalScore} נקודות</div>
+          <p className="text-sm" style={{ color: COLORS.muted }}>הכלל היה: {s.rule}</p>
           <Btn variant="primary" onClick={onBack}><Home size={18} /> חזרה למרכז המשחקים</Btn>
         </div>
       )}

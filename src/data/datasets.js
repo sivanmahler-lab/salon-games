@@ -102,13 +102,9 @@ export function buildCharacters() {
   return shuffle(ALL_CHARACTERS);
 }
 
-export function buildShrinkPool(players) {
-  return players.map((p) => {
-    const personalPool = fieldAwarePool(PERSONALIZED_SHRINK_TEMPLATES, p, []);
-    const combined = shuffle([...GENERIC_SHRINK_RULES, ...personalPool]);
-    const tag = pick(TRAIT_TAGS, 1)[0];
-    return { player: p, rule: fillTemplate(combined[0], p, { tag }) };
-  });
+// One secret rule that everyone but the psychologist follows.
+export function buildShrinkRule() {
+  return shuffle([...GENERIC_SHRINK_RULES])[0];
 }
 
 export function buildAliasDeck(players) {

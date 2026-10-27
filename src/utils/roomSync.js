@@ -1,6 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { GAME_DEFS } from "../constants/theme";
-import { shuffle, buildCharacters, buildShrinkPool, buildAliasDeck } from "../data/datasets";
+import { shuffle, buildCharacters, buildShrinkRule, buildAliasDeck } from "../data/datasets";
 
 /* ----------------------------------------------------------------------------
    ROOM SYNC ADAPTER
@@ -145,7 +145,7 @@ export function roomReducer(room, action) {
         return { ...room, screen: "alias", alias: startTurnGameState(room.players, shuffle(buildAliasDeck(room.players))) };
       }
       if (action.game === "shrink") {
-        return { ...room, screen: "shrink", shrink: { phase: "select", psychId: null, rules: {}, clues: {}, diagnosed: {}, totalScore: 0 } };
+        return { ...room, screen: "shrink", shrink: { phase: "select", psychId: null, rule: "", clues: 0, found: false, totalScore: 0 } };
       }
       return room;
     }
@@ -189,30 +189,18 @@ export function roomReducer(room, action) {
     case "SHRINK_SELECT":
       return { ...room, shrink: { ...room.shrink, psychId: action.id } };
     case "SHRINK_ASSIGN": {
-      const others = room.players.filter((p) => p.id !== room.shrink.psychId);
-      const pool = buildShrinkPool(others);
-      const rules = {};
-      const clues = {};
-      const diagnosed = {};
-      pool.forEach(({ player, rule }) => {
-        rules[player.id] = rule;
-        clues[player.id] = 0;
-        diagnosed[player.id] = false;
-      });
-      return { ...room, shrink: { ...room.shrink, rules, clues, diagnosed, phase: "diagnose" } };
+      // One secret rule, the same for everyone except the psychologist.
+      const rule = buildShrinkRule();
+      return { ...room, shrink: { ...room.shrink, rule, clues: 0, found: false, phase: "diagnose" } };
     }
     case "SHRINK_CLUE":
-      return { ...room, shrink: { ...room.shrink, clues: { ...room.shrink.clues, [action.id]: room.shrink.clues[action.id] + 1 } } };
+      return { ...room, shrink: { ...room.shrink, clues: room.shrink.clues + 1 } };
     case "SHRINK_DIAGNOSE":
-      return { ...room, shrink: { ...room.shrink, diagnosed: { ...room.shrink.diagnosed, [action.id]: true } } };
+      return { ...room, shrink: { ...room.shrink, found: true } };
     case "SHRINK_FINISH": {
       const s = room.shrink;
-      const totalScore = Object.keys(s.diagnosed).reduce(
-        (acc, id) => acc + (s.diagnosed[id] ? Math.max(1, 3 - s.clues[id]) : 0),
-        0
-      );
-      const diagCount = Object.values(s.diagnosed).filter(Boolean).length;
-      const players = room.players.map((p) => (p.id === s.psychId ? { ...p, score: p.score + totalScore, diagnosed: p.diagnosed + diagCount } : p));
+      const totalScore = s.found ? Math.max(1, 3 - s.clues) : 0;
+      const players = room.players.map((p) => (p.id === s.psychId ? { ...p, score: p.score + totalScore, diagnosed: p.diagnosed + (s.found ? 1 : 0) } : p));
       return { ...room, players, shrink: { ...s, phase: "result", totalScore } };
     }
 
