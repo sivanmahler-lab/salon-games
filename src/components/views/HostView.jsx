@@ -206,8 +206,8 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
             <Btn variant="subtle" onClick={() => dispatch({ type: "SET_PAUSED", value: true })}><Pause size={18} /> PAUSE</Btn>
           )}
           <div className="flex w-full items-center justify-center gap-6 text-sm font-bold">
-            <span style={{ color: COLORS.emerald }}>✓ {g.correct}</span>
-            <span style={{ color: COLORS.coral }}>⏭ {g.skips}</span>
+            <span style={{ color: COLORS.emerald }}>נכונות: {g.correct}</span>
+            <span style={{ color: COLORS.coral }}>דילוגים: {g.skips}</span>
           </div>
           <div style={{ background: `${color}22`, borderColor: color }} className="w-full rounded-2xl border-2 border-dashed p-8">
             <div className="text-lg font-black" style={{ color: COLORS.text }}>{playingCopy(turnPlayer.name)}</div>

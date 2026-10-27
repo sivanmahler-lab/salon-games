@@ -62,8 +62,8 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
           </div>
         </div>
         <div className="flex gap-6 text-sm font-bold">
-          <span style={{ color: COLORS.emerald }}>✓ {w.correct}</span>
-          <span style={{ color: COLORS.coral }}>⏭ {w.skips}</span>
+          <span style={{ color: COLORS.emerald }}>נכונות: {w.correct}</span>
+          <span style={{ color: COLORS.coral }}>דילוגים: {w.skips}</span>
         </div>
       </div>
     );
