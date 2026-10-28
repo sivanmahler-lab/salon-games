@@ -12,7 +12,7 @@ import { Podium } from "./Podium";
 
 export function PlayerWaiting({ room, myName, label }) {
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
+    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-5 landscape:gap-2 px-6 text-center">
       <Logo />
       <Sparkles size={36} color={COLORS.purple} />
       <div>
@@ -31,7 +31,7 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
 
   if (w.phase === "ready") {
     return (
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-4 landscape:gap-2 px-6 text-center">
         <Timer size={36} color={COLORS.purple} />
         <div className="text-lg font-black" style={{ color: COLORS.text }}>
           {isGuesser ? "התור שלך מתחיל עוד רגע!" : `התור של ${turnPlayer.name} מתחיל עוד רגע`}
@@ -43,7 +43,7 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
 
   if (w.phase === "turnEnd") {
     return (
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-4 landscape:gap-2 px-6 text-center">
         <Trophy size={36} color={COLORS.amber} />
         <div className="text-lg font-black" style={{ color: COLORS.text }}>הסיבוב הזה הסתיים!</div>
         <p className="text-sm" style={{ color: COLORS.muted }}>ממתינים שהמנחה יתחיל את התור הבא...</p>
@@ -54,7 +54,7 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
   // playing
   if (isGuesser) {
     return (
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-6 text-center">
+      <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-6 landscape:gap-2 px-6 text-center">
         <div className="text-2xl font-black" style={{ color: COLORS.amber }}>⏱ {w.timeLeft}</div>
         <div className="rounded-3xl border-2 border-dashed p-8" style={{ borderColor: COLORS.purple, background: `${COLORS.purple}1a` }}>
           <div className="text-lg font-black leading-relaxed" style={{ color: COLORS.text }}>
@@ -70,7 +70,7 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
   }
 
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-6">
+    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-6 landscape:gap-2 px-6">
       <div className="text-center text-lg font-black" style={{ color: COLORS.amber }}>⏱ {w.timeLeft}</div>
       <PartyCard big stampColor={COLORS.purple} stampLabel="מי אני?">{w.deck[w.cursor]}</PartyCard>
     </div>
@@ -85,7 +85,7 @@ export function PlayerAlias({ room, dispatch, myId }) {
 
   if (a.phase === "ready") {
     return (
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-4 landscape:gap-2 px-6 text-center">
         <Timer size={36} color={COLORS.amber} />
         <div className="text-lg font-black" style={{ color: COLORS.text }}>
           {isDescriber ? "התור שלך להסביר מתחיל עוד רגע!" : `התור של ${turnPlayer.name} להסביר מתחיל עוד רגע`}
@@ -101,7 +101,7 @@ export function PlayerAlias({ room, dispatch, myId }) {
 
   if (a.phase === "turnEnd") {
     return (
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-4 landscape:gap-2 px-6 text-center">
         <Trophy size={36} color={COLORS.amber} />
         <div className="text-lg font-black" style={{ color: COLORS.text }}>הסיבוב הזה הסתיים!</div>
         <p className="text-sm" style={{ color: COLORS.muted }}>ממתינים שהמנחה יתחיל את התור הבא...</p>
@@ -115,7 +115,7 @@ export function PlayerAlias({ room, dispatch, myId }) {
       setDragX(0);
     };
     return (
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-6">
+      <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-6 landscape:gap-2 px-6">
         <div className="text-center text-2xl font-black" style={{ color: COLORS.emerald }}>{a.correct}</div>
         <motion.div
           className="w-full"
@@ -142,7 +142,7 @@ export function PlayerAlias({ room, dispatch, myId }) {
   }
 
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-5 px-6 text-center">
+    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-5 landscape:gap-2 px-6 text-center">
       <div className="text-3xl font-black" style={{ color: COLORS.amber }}>⏱ {a.timeLeft}</div>
       <div className="text-lg font-black" style={{ color: COLORS.text }}>{turnPlayer.name} מסביר/ה מילה. נחשו בקול מה המילה!</div>
       <div className="flex gap-6 text-sm font-bold">
@@ -158,7 +158,7 @@ export function PlayerShrink({ room, dispatch, myId }) {
 
   if (s.phase === "select") {
     return (
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-4 landscape:gap-2 px-6 text-center">
         <Stethoscope size={36} color={COLORS.emerald} />
         <div className="text-lg font-black" style={{ color: COLORS.text }}>המנחה בוחר/ת מי מאבחן/ת...</div>
       </div>
@@ -168,7 +168,7 @@ export function PlayerShrink({ room, dispatch, myId }) {
   if (isPsych) {
     if (s.phase === "diagnose") {
       return (
-        <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-6 text-center">
+        <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-6 landscape:gap-2 px-6 text-center">
           <Stethoscope size={40} color={COLORS.emerald} />
           <div className="text-xl font-black leading-relaxed" style={{ color: COLORS.text }}>
             התור שלך! עליך לגלות את הכלל
@@ -187,7 +187,7 @@ export function PlayerShrink({ room, dispatch, myId }) {
     }
     if (s.phase === "result") {
       return (
-        <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-4 landscape:gap-2 px-6 text-center">
           <Trophy size={44} color={COLORS.amber} />
           <div className="text-lg font-black" style={{ color: COLORS.text }}>סיימת עם {s.totalScore} נקודות!</div>
           <p className="text-sm" style={{ color: COLORS.muted }}>הכלל היה: {s.rule}</p>
@@ -199,7 +199,7 @@ export function PlayerShrink({ room, dispatch, myId }) {
 
   // everyone else follows the same rule
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-6 px-6">
+    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-6 landscape:gap-2 px-6">
       <div className="text-center text-sm font-bold" style={{ color: COLORS.muted }}>הכלל הסודי של כולם. אל תגלו אותו, תנו לפסיכולוג/ית לנחש</div>
       <PartyCard stampColor={COLORS.emerald} stampLabel="הכלל הסודי">{s.rule || "מחכים שהמנחה יתחיל..."}</PartyCard>
       <p className="text-xs" style={{ color: COLORS.muted }}>כשהפסיכולוג/ית שואל/ת אתכם שאלה, ענו לפי הכלל הזה בלי לחשוף אותו</p>
@@ -231,7 +231,7 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
 
   if (!room) {
     return (
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+      <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-4 landscape:gap-2 px-6 text-center">
         <Logo />
         {connecting ? (
           <>

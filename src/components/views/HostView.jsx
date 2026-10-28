@@ -180,7 +180,7 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
   const nextPlayer = room.players[(g.turnIdx + 1) % room.players.length];
 
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-5 pb-10 pt-6 md:max-w-xl">
+    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 md:max-w-xl landscape:max-w-3xl">
       <TopBar title={`${title} (מסך מנחה)`} onBack={onBack} right={g.phase === "playing" ? `⏱ ${g.timeLeft}` : ""} helpTitle={helpTitle} helpSteps={helpSteps} />
 
       {g.phase === "ready" && (
@@ -195,7 +195,7 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
       )}
 
       {g.phase === "playing" && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-center">
           {room.paused ? (
             <div className="flex w-full flex-col items-center gap-3 rounded-2xl border-2 p-5" style={{ borderColor: COLORS.amber, background: `${COLORS.amber}1a` }}>
               <div className="text-lg font-black" style={{ color: COLORS.amber }}>⏸ המשחק מושהה</div>
@@ -209,7 +209,7 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
             <span style={{ color: COLORS.emerald }}>נכונות: {g.correct}</span>
             <span style={{ color: COLORS.coral }}>דילוגים: {g.skips}</span>
           </div>
-          <div style={{ background: `${color}22`, borderColor: color }} className="w-full rounded-2xl border-2 border-dashed p-8">
+          <div style={{ background: `${color}22`, borderColor: color }} className="w-full rounded-2xl border-2 border-dashed p-4">
             <div className="text-lg font-black" style={{ color: COLORS.text }}>{playingCopy(turnPlayer.name)}</div>
           </div>
           {gameKey === "whoami" && !room.paused && (

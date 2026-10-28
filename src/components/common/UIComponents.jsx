@@ -61,7 +61,7 @@ export function PartyCard({ children, stampColor = COLORS.purple, stampLabel, bi
       initial={{ opacity: 0, y: 16, rotate: 0 }}
       animate={{ opacity: 1, y: 0, rotate: -1.5 }}
       transition={{ type: "spring", stiffness: 260, damping: 22 }}
-      className="relative w-full rounded-2xl border-2 border-dashed p-6 shadow-2xl shadow-black/50"
+      className={`relative w-full rounded-2xl border-2 border-dashed shadow-2xl shadow-black/50 ${big ? "p-4" : "p-6"}`}
       style={{ background: "#f8f5ee", borderColor: "#d9d2bf", color: "#1a1a1a" }}
     >
       {stampLabel && (
@@ -69,7 +69,10 @@ export function PartyCard({ children, stampColor = COLORS.purple, stampLabel, bi
           {stampLabel}
         </div>
       )}
-      <div className={`text-center font-black leading-snug ${big ? "text-3xl md:text-5xl" : "text-xl md:text-2xl"}`} style={{ fontFamily: "Rubik, Heebo, sans-serif" }}>
+      <div
+        className={`text-center font-black leading-snug ${big ? "" : "text-xl md:text-2xl"}`}
+        style={{ fontFamily: "Rubik, Heebo, sans-serif", ...(big ? { fontSize: "clamp(1.6rem, min(9vw, 11vh), 4.5rem)" } : {}) }}
+      >
         {children}
       </div>
     </motion.div>
