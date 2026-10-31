@@ -214,17 +214,47 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
   const channelRef = useRef(null);
 
   useEffect(() => {
-    const ch = createRoomChannel(normalizeRoomCode(roomCode));
-    channelRef.current = ch;
-    const unsub = ch.subscribe((msg) => {
-      if (msg.type === "STATE") {
-        setRoom(msg.room);
-        setConnecting(false);
-      }
-    });
-    ch.send({ type: "ACTION", action: { type: "JOIN", id: myId, name, traits } });
+    let alive = true;
+    let unsub = () => {};
+    let lastSeen = Date.now();
+
+    // (Re)connect to the room and ask the host for the current state.
+    const connect = () => {
+      unsub();
+      channelRef.current?.close();
+      const ch = createRoomChannel(normalizeRoomCode(roomCode));
+      channelRef.current = ch;
+      unsub = ch.subscribe((msg) => {
+        if (msg.type === "STATE") {
+          lastSeen = Date.now();
+          setRoom(msg.room);
+          setConnecting(false);
+        }
+      });
+      ch.send({ type: "ACTION", action: { type: "JOIN", id: myId, name, traits } });
+      ch.send({ type: "ACTION", action: { type: "SYNC" } });
+    };
+    connect();
+
+    // A phone that went to the background (another tab, locked screen) may have missed updates or lost its
+    // connection. When it comes back, or when the host has been silent too long, reconnect and catch up.
+    const wake = () => { if (alive && !document.hidden) connect(); };
+    const watchdog = setInterval(() => { if (alive && !document.hidden && Date.now() - lastSeen > 12000) { lastSeen = Date.now(); connect(); } }, 4000);
+    document.addEventListener("visibilitychange", wake);
+    window.addEventListener("pageshow", wake);
+    window.addEventListener("online", wake);
+
     const timeout = setTimeout(() => setConnecting(false), 6000);
-    return () => { unsub(); ch.close(); clearTimeout(timeout); };
+    return () => {
+      alive = false;
+      unsub();
+      channelRef.current?.close();
+      clearInterval(watchdog);
+      clearTimeout(timeout);
+      document.removeEventListener("visibilitychange", wake);
+      window.removeEventListener("pageshow", wake);
+      window.removeEventListener("online", wake);
+    };
   }, [roomCode]);
 
   const dispatch = useCallback((action) => channelRef.current?.send({ type: "ACTION", action }), []);

@@ -343,12 +343,17 @@ export default function HostApp({ onExit }) {
   const [roomCode] = useState(() => generateRoomCode());
   const [room, localDispatch] = useReducer(roomReducer, null, createInitialRoom);
   const channelRef = useRef(null);
+  const roomRef = useRef(room);
+  roomRef.current = room;
 
   useEffect(() => {
     const ch = createRoomChannel(normalizeRoomCode(roomCode));
     channelRef.current = ch;
     const unsub = ch.subscribe((msg) => {
-      if (msg.type === "ACTION") localDispatch(msg.action);
+      if (msg.type !== "ACTION") return;
+      if (msg.action.type === "SYNC") ch.send({ type: "STATE", room: roomRef.current }); // a phone came back and wants to catch up
+      else localDispatch(msg.action);
+      if (msg.action.type === "JOIN") setTimeout(() => ch.send({ type: "STATE", room: roomRef.current }), 300);
     });
     return () => { unsub(); ch.close(); };
   }, [roomCode]);
@@ -356,6 +361,12 @@ export default function HostApp({ onExit }) {
   useEffect(() => {
     channelRef.current?.send({ type: "STATE", room });
   }, [room]);
+
+  // Heartbeat: repeat the current state every few seconds, so a phone that missed an update catches up by itself.
+  useEffect(() => {
+    const t = setInterval(() => channelRef.current?.send({ type: "STATE", room: roomRef.current }), 4000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const activeKey = ["whoami", "alias"].find((k) => room.screen === k && room[k]?.phase === "playing");
