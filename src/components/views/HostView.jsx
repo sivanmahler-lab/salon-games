@@ -13,15 +13,13 @@ import { Podium } from "./Podium";
 ============================================================================ */
 
 export function HostLobby({ room, dispatch, roomCode, onExit }) {
-  const setConfig = (patch) => dispatch({ type: "SET_CONFIG", patch });
-
   const joinUrl = typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(roomCode)}` : roomCode;
   const [copied, setCopied] = useState(false);
   const canStart = room.players.length >= 3;
 
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-5 pb-12 pt-8 md:max-w-2xl">
-      <div className="mb-4 flex items-center justify-between">
+    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 landscape:max-w-6xl">
+      <div className="mb-3 flex shrink-0 items-center justify-between">
         <button onClick={onExit} className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold" style={{ color: COLORS.muted, background: COLORS.surfaceAlt }}>
           <LogOut size={14} /> סגירת חדר
         </button>
@@ -29,104 +27,77 @@ export function HostLobby({ room, dispatch, roomCode, onExit }) {
         <div className="w-[92px]" />
       </div>
 
-      <GlassCard className="mb-6 flex flex-col items-center gap-3 text-center">
-        <QRCode text={joinUrl} />
-        <div className="flex items-center gap-2">
-          <div className="rounded-xl border px-4 py-2 text-lg font-black tracking-widest" style={{ borderColor: COLORS.border, color: COLORS.text, fontFamily: "Rubik, sans-serif" }}>
-            {roomCode}
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 landscape:grid-cols-2">
+        {/* Right side: how to join */}
+        <GlassCard className="flex min-h-0 flex-col items-center justify-center gap-2 text-center">
+          <QRCode text={joinUrl} />
+          <div className="flex items-center gap-2">
+            <div className="rounded-xl border px-4 py-2 text-xl font-black tracking-widest" style={{ borderColor: COLORS.border, color: COLORS.text, fontFamily: "Rubik, sans-serif" }}>
+              {roomCode}
+            </div>
+            <button
+              onClick={() => { navigator.clipboard?.writeText(roomCode).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
+              className="rounded-xl p-2.5"
+              style={{ background: COLORS.surfaceAlt, color: COLORS.muted }}
+            >
+              {copied ? <Check size={18} color={COLORS.emerald} /> : <Copy size={18} />}
+            </button>
           </div>
-          <button
-            onClick={() => { navigator.clipboard?.writeText(roomCode).catch(() => {}); setCopied(true); setTimeout(() => setCopied(false), 1500); }}
-            className="rounded-xl p-2.5"
-            style={{ background: COLORS.surfaceAlt, color: COLORS.muted }}
+          <p className="text-sm" style={{ color: COLORS.muted }}>סרקו את הקוד או הזינו אותו ידנית בטלפון כדי להצטרף</p>
+          {/* Opens the join screen (code already filled in) in a NEW tab, so this host tab, which holds the room, stays open.
+              Going "back" in this same tab would close the room, because the room only lives in this tab. */}
+          <a
+            href={joinUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-bold"
+            style={{ color: COLORS.text, background: COLORS.surfaceAlt, border: `1px solid ${COLORS.border}` }}
           >
-            {copied ? <Check size={18} color={COLORS.emerald} /> : <Copy size={18} />}
-          </button>
-        </div>
-        <p className="text-xs" style={{ color: COLORS.muted }}>סרקו את הקוד או הזינו אותו ידנית בטלפון כדי להצטרף</p>
-        {/* Opens the join screen (code already filled in) in a NEW tab, so this host tab, which holds the room, stays open.
-            Going "back" in this same tab would close the room, because the room only lives in this tab. */}
-        <a
-          href={joinUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="flex items-center gap-1.5 rounded-xl px-3.5 py-2.5 text-xs font-bold"
-          style={{ color: COLORS.text, background: COLORS.surfaceAlt, border: `1px solid ${COLORS.border}` }}
-        >
-          <ExternalLink size={14} /> הצטרפות כשחקן מהמכשיר הזה (נפתח בלשונית חדשה)
-        </a>
-      </GlassCard>
+            <ExternalLink size={14} /> הצטרפות כשחקן מהמכשיר הזה (נפתח בלשונית חדשה)
+          </a>
+        </GlassCard>
 
-      <div className="space-y-6">
-        <section>
-          <div className="mb-3 text-sm font-bold" style={{ color: COLORS.muted }}>קטגוריית הערב</div>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {CATEGORIES.map((c) => {
-              const Icon = c.icon;
-              const active = room.category === c.id;
-              return (
-                <button
-                  key={c.id}
-                  onClick={() => setConfig({ category: c.id })}
-                  className="flex flex-col items-center gap-2 rounded-2xl border p-3.5 transition-all active:scale-95"
-                  style={{ borderColor: active ? COLORS.purple : COLORS.border, background: active ? `${COLORS.purple}1a` : COLORS.surface }}
-                >
-                  <Icon size={22} color={active ? COLORS.purple : COLORS.muted} />
-                  <span className="text-xs font-bold" style={{ color: active ? COLORS.text : COLORS.muted }}>{c.label}</span>
-                </button>
-              );
-            })}
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-1 text-sm font-bold" style={{ color: COLORS.muted }}>המשחקים שישוחקו הערב</div>
-          <p className="mb-3 text-xs" style={{ color: COLORS.muted }}>
-            כל המשחקים האלה ישוחקו הערב. כשמוכנים, לוחצים על "התחילו את הערב" בתחתית המסך.
-          </p>
-          <div className="space-y-2.5">
-            {GAME_DEFS.map((g) => (
-              <div
-                key={g.id}
-                className="flex w-full items-center gap-3 rounded-2xl border p-3.5 text-right"
-                style={{ borderColor: g.color, background: `${g.color}1a` }}
-              >
-                <span className="flex-1">
-                  <span className="block text-sm font-bold" style={{ color: COLORS.text }}>{g.title}</span>
-                  <span className="block text-xs" style={{ color: COLORS.muted }}>{g.desc}</span>
-                </span>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section>
-          <div className="mb-3 flex items-center gap-2 text-sm font-bold" style={{ color: COLORS.muted }}>
-            <Users size={16} /> מי הצטרף עד עכשיו ({room.players.length})
-          </div>
-          {room.players.length === 0 ? (
-            <p className="text-xs" style={{ color: COLORS.muted }}>ממתינים שיצטרפו שחקנים מהטלפונים שלהם...</p>
-          ) : (
+        {/* Left side: the games and the players */}
+        <div className="flex min-h-0 flex-col gap-3">
+          <section className="shrink-0">
+            <div className="mb-2 text-sm font-bold" style={{ color: COLORS.muted }}>המשחקים שישוחקו הערב</div>
             <div className="space-y-2">
-              {room.players.map((p, i) => (
-                <div key={p.id} className="flex items-center gap-3 rounded-2xl border p-3" style={{ borderColor: COLORS.border, background: COLORS.surface }}>
-                  <Avatar index={i} name={p.name} />
-                  <div className="flex-1">
-                    <div className="font-bold" style={{ color: COLORS.text }}>{p.name}</div>
-                    {p.traits.length > 0 && <div className="text-[11px]" style={{ color: COLORS.muted }}>{p.traits.join(" · ")}</div>}
-                  </div>
+              {GAME_DEFS.map((g) => (
+                <div key={g.id} className="flex items-center gap-3 rounded-2xl border px-3.5 py-2 text-right" style={{ borderColor: g.color, background: `${g.color}1a` }}>
+                  <span className="flex-1">
+                    <span className="block text-sm font-bold" style={{ color: COLORS.text }}>{g.title}</span>
+                    <span className="block text-xs" style={{ color: COLORS.muted }}>{g.desc}</span>
+                  </span>
                 </div>
               ))}
             </div>
-          )}
-        </section>
+          </section>
+
+          <section className="flex min-h-0 flex-1 flex-col">
+            <div className="mb-2 flex shrink-0 items-center gap-2 text-sm font-bold" style={{ color: COLORS.muted }}>
+              <Users size={16} /> מי הצטרף עד עכשיו ({room.players.length})
+            </div>
+            {room.players.length === 0 ? (
+              <p className="text-xs" style={{ color: COLORS.muted }}>ממתינים שיצטרפו שחקנים מהטלפונים שלהם...</p>
+            ) : (
+              <div className="grid min-h-0 flex-1 grid-cols-2 content-start gap-2 overflow-y-auto">
+                {room.players.map((p, i) => (
+                  <div key={p.id} className="flex items-center gap-2 rounded-2xl border p-2" style={{ borderColor: COLORS.border, background: COLORS.surface }}>
+                    <Avatar index={i} name={p.name} />
+                    <div className="min-w-0 flex-1 truncate font-bold" style={{ color: COLORS.text }}>{p.name}</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
 
-      <div className="mt-8">
+      <div className="mt-3 shrink-0">
         <Btn full variant="primary" disabled={!canStart} onClick={() => dispatch({ type: "START_HUB" })}>
           <Sparkles size={18} /> התחילו את הערב
         </Btn>
-        {!canStart && <p className="mt-2 text-center text-[11px]" style={{ color: COLORS.muted }}>נדרשים 3 שחקנים מחוברים לפחות</p>}
+        {!canStart && <p className="mt-1 text-center text-[11px]" style={{ color: COLORS.muted }}>נדרשים 3 שחקנים מחוברים לפחות</p>}
       </div>
     </div>
   );
@@ -136,20 +107,20 @@ export function HostHub({ room, dispatch, onPodium, onLobby }) {
   const games = GAME_DEFS.filter((g) => room.enabledGames.includes(g.id));
   const anyScore = room.players.some((p) => p.score > 0 || p.correct > 0 || p.skips > 0 || p.diagnosed > 0);
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-5 pb-12 pt-8 md:max-w-xl">
-      <div className="mb-6 flex justify-center"><Logo /></div>
-      <GlassCard className="mb-6 text-center text-xs font-bold" style={{ color: COLORS.muted }}>
+    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 landscape:max-w-5xl">
+      <div className="mb-3 flex shrink-0 justify-center"><Logo /></div>
+      <GlassCard className="mb-3 shrink-0 text-center text-xs font-bold" style={{ color: COLORS.muted }}>
         {room.players.length} שחקנים מחוברים — המסך הזה הוא מסך המנחה, בלי סודות עליו 🙈
       </GlassCard>
-      <div className="mb-3 text-sm font-bold" style={{ color: COLORS.muted }}>בחרו משחק</div>
-      <div className="space-y-3">
+      <div className="mb-2 shrink-0 text-sm font-bold" style={{ color: COLORS.muted }}>בחרו משחק</div>
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 landscape:grid-cols-3">
         {games.map((g) => {
           const Icon = g.icon;
           return (
             <button
               key={g.id}
               onClick={() => dispatch({ type: "START_GAME", game: g.id })}
-              className="flex w-full items-center gap-4 rounded-2xl border p-4 text-right transition-all active:scale-[0.98]"
+              className="flex w-full items-center gap-4 rounded-2xl border p-4 text-right transition-all active:scale-[0.98] landscape:flex-col landscape:justify-center landscape:text-center"
               style={{ borderColor: COLORS.border, background: COLORS.surface }}
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" style={{ background: `${g.color}22` }}>
@@ -159,15 +130,15 @@ export function HostHub({ room, dispatch, onPodium, onLobby }) {
                 <div className="font-black" style={{ color: COLORS.text }}>{g.title}</div>
                 <div className="text-xs" style={{ color: COLORS.muted }}>{g.desc}</div>
               </div>
-              <ChevronLeft size={20} color={COLORS.muted} />
+              <ChevronLeft size={20} color={COLORS.muted} className="landscape:hidden" />
             </button>
           );
         })}
       </div>
-      <div className="mt-6">
+      <div className="mt-3 shrink-0">
         <Btn full variant="gold" disabled={!anyScore} onClick={onPodium}><Trophy size={18} /> לוח התוצאות</Btn>
       </div>
-      <div className="mt-3">
+      <div className="mt-2 shrink-0">
         <Btn full variant="ghost" onClick={onLobby}>חזרה להגדרות הערב (להוסיף או להסיר משחקים)</Btn>
       </div>
     </div>
@@ -180,7 +151,7 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
   const nextPlayer = room.players[(g.turnIdx + 1) % room.players.length];
 
   return (
-    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 md:max-w-xl landscape:max-w-3xl">
+    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 md:max-w-xl landscape:max-w-5xl">
       <TopBar title={`${title} (מסך מנחה)`} onBack={onBack} right={g.phase === "playing" ? `⏱ ${g.timeLeft}` : ""} helpTitle={helpTitle} helpSteps={helpSteps} />
 
       {g.phase === "ready" && (
@@ -289,7 +260,7 @@ export function HostShrink({ room, dispatch, onBack }) {
   const others = room.players.filter((p) => p.id !== s.psychId);
 
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-5 pb-10 pt-6 md:max-w-xl">
+    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 md:max-w-xl landscape:max-w-5xl">
       <TopBar
         title="הפסיכולוג (מסך מנחה)"
         onBack={onBack}
@@ -304,13 +275,13 @@ export function HostShrink({ room, dispatch, onBack }) {
       />
 
       {s.phase === "select" && (
-        <div className="flex flex-1 flex-col gap-5">
-          <div className="text-center">
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <div className="shrink-0 text-center">
             <Stethoscope size={40} color={COLORS.emerald} className="mx-auto" />
             <div className="mt-3 text-xl font-black" style={{ color: COLORS.text }}>מי מאבחן/ת הערב?</div>
             <p className="mt-1 text-sm" style={{ color: COLORS.muted }}>הבחירה תישלח ישירות לטלפון של כל אחד — לא צריך להעביר שום דבר.</p>
           </div>
-          <div className="space-y-2">
+          <div className="grid min-h-0 flex-1 grid-cols-1 content-start gap-2 overflow-y-auto landscape:grid-cols-2">
             {room.players.map((p, i) => (
               <button
                 key={p.id}
@@ -324,7 +295,7 @@ export function HostShrink({ room, dispatch, onBack }) {
               </button>
             ))}
           </div>
-          <Btn variant="primary" disabled={!s.psychId} onClick={() => dispatch({ type: "SHRINK_ASSIGN" })}>
+          <Btn variant="primary" className="shrink-0" disabled={!s.psychId} onClick={() => dispatch({ type: "SHRINK_ASSIGN" })}>
             <DoorOpen size={18} /> הקצו כללים סודיים והתחילו
           </Btn>
         </div>
@@ -356,6 +327,7 @@ export function HostShrink({ room, dispatch, onBack }) {
 export function HostPodium({ room, dispatch, onExit }) {
   return (
     <Podium
+      tv
       players={room.players}
       actions={
         <div className="space-y-2.5">
@@ -393,6 +365,14 @@ export default function HostApp({ onExit }) {
   }, [room]);
 
   const backToHub = () => localDispatch({ type: "BACK_TO_HUB" });
+
+  // The host screen is usually a TV, seen from across the room: scale all sizes with the screen height.
+  useEffect(() => {
+    const el = document.documentElement;
+    const before = el.style.fontSize;
+    el.style.fontSize = "clamp(16px, 2.3vh, 44px)";
+    return () => { el.style.fontSize = before; };
+  }, []);
 
   return (
     <>

@@ -160,7 +160,8 @@ export function roomReducer(room, action) {
       const key = action.game;
       const g = room[key];
       if (!g) return room;
-      return { ...room, [key]: { ...g, phase: "ready", turnIdx: (g.turnIdx + 1) % room.players.length } };
+      // the next player starts on a fresh card, never the one the last player was left on
+      return { ...room, [key]: { ...g, phase: "ready", turnIdx: (g.turnIdx + 1) % room.players.length, cursor: (g.cursor + 1) % g.deck.length } };
     }
     case "TICK": {
       const key = action.game;

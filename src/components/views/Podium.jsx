@@ -48,7 +48,7 @@ export function PodiumStand({ player, place, index }) {
   );
 }
 
-export function Podium({ players, actions }) {
+export function Podium({ players, actions, tv = false }) {
   const sorted = [...players].sort((a, b) => b.score - a.score);
   const top3 = sorted.slice(0, 3);
   const [first, second, third] = [top3[0], top3[1], top3[2]];
@@ -56,19 +56,19 @@ export function Podium({ players, actions }) {
   const [burst] = useState(1);
 
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-5 pb-12 pt-8 md:max-w-xl">
+    <div className={tv ? "relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 landscape:max-w-5xl" : "relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-5 pb-12 pt-8 md:max-w-xl"}>
       <Confetti burstKey={burst} />
-      <div className="mb-6 flex justify-center"><Logo /></div>
+      <div className={`flex shrink-0 justify-center ${tv ? "mb-2" : "mb-6"}`}><Logo /></div>
       <div className="mb-2 text-center text-xl font-black" style={{ color: COLORS.text }}>לוח התוצאות</div>
-      <p className="mb-8 text-center text-sm" style={{ color: COLORS.muted }}>ערב בלתי נשכח, רשמית</p>
+      <p className={`text-center text-sm ${tv ? "mb-3" : "mb-8"}`} style={{ color: COLORS.muted }}>ערב בלתי נשכח, רשמית</p>
 
-      <div className="mb-10 flex items-end justify-center gap-3">
+      <div className={`flex shrink-0 items-end justify-center gap-3 ${tv ? "mb-3" : "mb-10"}`}>
         {second && <PodiumStand player={second} place={2} index={0} />}
         {first && <PodiumStand player={first} place={1} index={1} />}
         {third && <PodiumStand player={third} place={3} index={2} />}
       </div>
 
-      <div className="mb-8 space-y-2.5">
+      <div className={tv ? "mb-3 min-h-0 flex-1 space-y-2 overflow-y-auto" : "mb-8 space-y-2.5"}>
         {sorted.map((p, i) => {
           const list = badges[p.id];
           return (
