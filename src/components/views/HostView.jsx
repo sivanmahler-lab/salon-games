@@ -7,6 +7,7 @@ import { COLORS, CATEGORIES, GAME_DEFS } from "../../constants/theme";
 import { createRoomChannel, generateRoomCode, normalizeRoomCode, roomReducer, createInitialRoom } from "../../utils/roomSync";
 import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar } from "../common/UIComponents";
 import { Podium } from "./Podium";
+import { notifyJoin } from "../../utils/notify";
 
 /* ============================================================================
    HOST — views
@@ -353,7 +354,14 @@ export default function HostApp({ onExit }) {
       if (msg.type !== "ACTION") return;
       if (msg.action.type === "SYNC") ch.send({ type: "STATE", room: roomRef.current }); // a phone came back and wants to catch up
       else localDispatch(msg.action);
-      if (msg.action.type === "JOIN") setTimeout(() => ch.send({ type: "STATE", room: roomRef.current }), 300);
+      if (msg.action.type === "JOIN") {
+        const before = roomRef.current.players.length;
+        const isNew = !roomRef.current.players.some((p) => p.id === msg.action.id);
+        setTimeout(() => {
+          ch.send({ type: "STATE", room: roomRef.current });
+          if (isNew) notifyJoin(msg.action.name, roomCode, before + 1);
+        }, 300);
+      }
     });
     return () => { unsub(); ch.close(); };
   }, [roomCode]);
