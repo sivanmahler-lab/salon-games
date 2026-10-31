@@ -55,7 +55,12 @@ const BASE_SHRINK_RULES = [
 ];
 
 // All the secret rules: the ones above plus the ones from the one-phone game.
-export const GENERIC_SHRINK_RULES = [...BASE_SHRINK_RULES, ...RULES];
+// Two one-phone rules say the same as rules above, so they are left out here.
+const DUPLICATE_RULES = new Set([
+  "כל תשובה חייבת לכלול צבע.",
+  "כל אחד עונה על האדם שיושב משמאלו, כאילו הוא עצמו.",
+]);
+export const GENERIC_SHRINK_RULES = [...BASE_SHRINK_RULES, ...RULES.filter((r) => !DUPLICATE_RULES.has(r))];
 
 export const PERSONALIZED_SHRINK_TEMPLATES = [
   "בכל תשובה תשלב/י את המילה \u2018{tag}\u2019",
