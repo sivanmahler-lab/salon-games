@@ -15,7 +15,7 @@ function ModeSection({ mode, setMode }) {
   return (
     <Section title="איך משחקים">
       <div className="flex flex-wrap gap-2">
-        <Chip big label="טלפון אחד באמצע" color={COLOR} active={mode === "one"} onClick={() => setMode("one")} />
+        <Chip big label="טלפון אחד לכולם" color={COLOR} active={mode === "one"} onClick={() => setMode("one")} />
         <Chip big label="כל אחד בטלפון שלו" color={COLOR} active={mode === "multi"} onClick={() => setMode("multi")} />
       </div>
     </Section>

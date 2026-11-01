@@ -40,7 +40,7 @@ export default function SoloApp({ onExit }) {
       </div>
 
       <h1 className="mt-4 text-3xl font-black" style={{ color: COLORS.text, fontFamily: "Rubik, sans-serif" }}>משחקי סלון</h1>
-      <p className="mt-1 text-sm" style={{ color: COLORS.muted }}>טלפון אחד באמצע החדר, וכולם מסביב.</p>
+      <p className="mt-1 text-sm" style={{ color: COLORS.muted }}>טלפון אחד לכולם. מעבירים אותו בין השחקנים.</p>
 
       <div className="mt-6 space-y-3">
         {GAMES.map((g) => {

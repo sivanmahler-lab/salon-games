@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { QrCode, Smartphone, Wifi, HelpCircle } from "lucide-react";
+import { Tv, Cast, Smartphone, Wifi, HelpCircle } from "lucide-react";
 import { COLORS } from "../../constants/theme";
 import { Logo, GlassCard, Btn } from "../common/UIComponents";
 import HowToPlay from "../common/HowToPlay";
@@ -53,18 +53,35 @@ export default function EntryScreen({ onHost, onJoin, onSolo, prefillCode }) {
   }
 
   return (
-    <div className="relative z-10 mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center gap-6 px-6 py-8 text-center">
+    <div className="relative z-10 mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center gap-4 px-6 py-5 text-center">
       <Logo size="text-4xl" />
       <div className="space-y-2">
         <p className="text-lg font-black" style={{ color: COLORS.text }}>משחקי חברה לערב בסלון</p>
         <p className="text-sm leading-relaxed" style={{ color: COLORS.muted }}>
-          מי אני, הפסיכולוג ואליאס. מכשיר אחד מארח את הערב (מחשב או טלוויזיה), וכל השחקנים מצטרפים מהטלפונים שלהם. בלי התקנות.
+          מי אני, הפסיכולוג ואליאס. בוחרים איך להציג את המסך הראשי, וכל השחקנים מצטרפים מהטלפונים שלהם. בלי התקנות.
         </p>
       </div>
-      <div className="w-full space-y-3">
-        <Btn full variant="primary" onClick={onHost}><QrCode size={18} /> אירוח ערב — המסך הראשי</Btn>
-        <Btn full variant="gold" onClick={() => setSub("join")}><Wifi size={18} /> הצטרפות מהטלפון שלי</Btn>
-        <Btn full variant="ghost" onClick={onSolo}><Smartphone size={18} /> טלפון אחד באמצע החדר</Btn>
+      <div className="w-full space-y-2.5">
+        <div className="text-sm font-black" style={{ color: COLORS.text }}>איך רוצים לשחק הערב?</div>
+        {[
+          { icon: Tv, color: COLORS.purple, title: "דפדפן בטלוויזיה", desc: "פותחים את האתר בדפדפן של הטלוויזיה החכמה. כולם מצטרפים מהטלפונים.", onClick: () => onHost("tv") },
+          { icon: Cast, color: COLORS.emerald, title: "שיקוף מסך בטלוויזיה", desc: "פותחים במחשב או בטלפון ומשקפים לטלוויזיה. כולם מצטרפים מהטלפונים.", onClick: () => onHost("mirror") },
+          { icon: Smartphone, color: COLORS.amber, title: "טלפון אחד לכולם", desc: "בלי טלוויזיה ובלי חיבורים. מעבירים טלפון אחד בין השחקנים.", onClick: onSolo },
+        ].map((o) => {
+          const Icon = o.icon;
+          return (
+            <button key={o.title} onClick={o.onClick} className="flex w-full items-center gap-3 rounded-2xl border p-3.5 text-right transition-all active:scale-[0.98]" style={{ borderColor: o.color, background: `${o.color}1a` }}>
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl" style={{ background: `${o.color}33` }}><Icon size={22} color={o.color} /></div>
+              <div className="flex-1">
+                <div className="font-black" style={{ color: COLORS.text }}>{o.title}</div>
+                <div className="text-xs leading-snug" style={{ color: COLORS.muted }}>{o.desc}</div>
+              </div>
+            </button>
+          );
+        })}
+        <div className="pt-2">
+          <Btn full variant="gold" onClick={() => setSub("join")}><Wifi size={18} /> הצטרפות מהטלפון שלי (יש לי קוד)</Btn>
+        </div>
       </div>
       <button onClick={() => setHelp(true)} className="flex items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-black" style={{ borderColor: COLORS.purple, color: COLORS.text, background: `${COLORS.purple}1a` }}>
         <HelpCircle size={18} color={COLORS.purple} /> איך משחקים? הוראות לכל משחק

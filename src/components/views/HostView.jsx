@@ -13,7 +13,7 @@ import { notifyJoin } from "../../utils/notify";
    HOST — views
 ============================================================================ */
 
-export function HostLobby({ room, dispatch, roomCode, onExit }) {
+export function HostLobby({ room, dispatch, roomCode, onExit, kind = "tv" }) {
   const joinUrl = typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(roomCode)}` : roomCode;
   const [copied, setCopied] = useState(false);
   const canStart = room.players.length >= 3;
@@ -45,6 +45,11 @@ export function HostLobby({ room, dispatch, roomCode, onExit }) {
             </button>
           </div>
           <p className="text-sm" style={{ color: COLORS.muted }}>סרקו את הקוד או הזינו אותו ידנית בטלפון כדי להצטרף</p>
+          <p className="max-w-md text-xs leading-relaxed" style={{ color: COLORS.amber }}>
+            {kind === "mirror"
+              ? "משקפים: את הכפתורים של המנחה לוחצים כאן, במכשיר שמשקף."
+              : "דפדפן בטלוויזיה: כדי לא להשתמש בשלט, הצטרפו מהטלפון ולחצו שם על \"שלט מנחה\"."}
+          </p>
           {/* Opens the join screen (code already filled in) in a NEW tab, so this host tab, which holds the room, stays open.
               Going "back" in this same tab would close the room, because the room only lives in this tab. */}
           <a
@@ -340,7 +345,7 @@ export function HostPodium({ room, dispatch, onExit }) {
   );
 }
 
-export default function HostApp({ onExit }) {
+export default function HostApp({ onExit, kind = "tv" }) {
   const [roomCode] = useState(() => generateRoomCode());
   const [room, localDispatch] = useReducer(roomReducer, null, createInitialRoom);
   const channelRef = useRef(null);
@@ -395,7 +400,7 @@ export default function HostApp({ onExit }) {
 
   return (
     <>
-      {room.screen === "lobby" && <HostLobby room={room} dispatch={localDispatch} roomCode={roomCode} onExit={onExit} />}
+      {room.screen === "lobby" && <HostLobby room={room} dispatch={localDispatch} roomCode={roomCode} onExit={onExit} kind={kind} />}
       {room.screen === "hub" && <HostHub room={room} dispatch={localDispatch} onPodium={() => localDispatch({ type: "GO_PODIUM" })} onLobby={() => localDispatch({ type: "BACK_TO_LOBBY" })} />}
       {room.screen === "whoami" && <HostWhoAmI room={room} dispatch={localDispatch} onBack={backToHub} />}
       {room.screen === "shrink" && <HostShrink room={room} dispatch={localDispatch} onBack={backToHub} />}

@@ -9,6 +9,7 @@ import SoloApp from "./components/solo/SoloApp";
 export default function App() {
   const [mode, setMode] = useState("entry"); // entry | host | player | solo
   const [joinInfo, setJoinInfo] = useState(null);
+  const [hostKind, setHostKind] = useState("tv"); // tv | mirror
   const [prefillCode] = useState(() => {
     if (typeof window === "undefined") return "";
     return new URLSearchParams(window.location.search).get("join") || "";
@@ -36,7 +37,7 @@ export default function App() {
       {mode === "entry" && (
         <EntryScreen
           prefillCode={prefillCode}
-          onHost={() => setMode("host")}
+          onHost={(kind) => { setHostKind(kind || "tv"); setMode("host"); }}
           onSolo={() => setMode("solo")}
           onJoin={(info) => {
             setJoinInfo(info);
@@ -44,7 +45,7 @@ export default function App() {
           }}
         />
       )}
-      {mode === "host" && <HostApp onExit={exitToEntry} />}
+      {mode === "host" && <HostApp onExit={exitToEntry} kind={hostKind} />}
       {mode === "solo" && <SoloApp onExit={exitToEntry} />}
       {mode === "player" && joinInfo && <PlayerApp {...joinInfo} onExit={exitToEntry} />}
     </div>
