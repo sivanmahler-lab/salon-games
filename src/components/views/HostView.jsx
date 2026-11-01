@@ -345,7 +345,44 @@ export function HostPodium({ room, dispatch, onExit }) {
   );
 }
 
+const SETUP = {
+  tv: {
+    title: "מציגים בדפדפן של הטלוויזיה",
+    steps: [
+      "ודאו שהאתר פתוח בדפדפן של הטלוויזיה החכמה, בגודל מלא.",
+      "בהמשך יופיע על המסך ברקוד (QR) וקוד חדר. כל מי שרוצה לשחק סורק אותו מהטלפון שלו.",
+      "בטלוויזיה אפשר ללחוץ על הכפתורים עם השלט, כמו עכבר. נוח יותר: מצטרפים מהטלפון ולוחצים שם על \"שלט מנחה\".",
+    ],
+  },
+  mirror: {
+    title: "משקפים את המסך לטלוויזיה",
+    steps: [
+      "פתחו את האתר במחשב או בטלפון, ושקפו אותו לטלוויזיה (Chromecast, AirPlay, Miracast או כבל HDMI).",
+      "ודאו שהמסך נראה בטלוויזיה. הכי יפה כשהטלפון מוטה לרוחב.",
+      "בהמשך יופיע ברקוד (QR) וקוד חדר. כל מי שרוצה לשחק סורק אותו מהטלפון שלו.",
+      "את כפתורי המנחה לוחצים במכשיר שמשקף.",
+    ],
+  },
+};
+
+// A short step before the code appears: the host decides how the main screen is shown.
+function HostSetup({ kind, onContinue, onBack }) {
+  const info = SETUP[kind] || SETUP.tv;
+  return (
+    <div className="relative z-10 mx-auto flex min-h-[100dvh] max-w-md flex-col justify-center gap-5 px-6 py-6 landscape:max-w-2xl">
+      <div className="flex justify-center"><Logo /></div>
+      <div className="text-center text-xl font-black" style={{ color: COLORS.text }}>{info.title}</div>
+      <ol className="list-decimal space-y-2 pr-5 text-sm leading-relaxed" style={{ color: COLORS.muted }}>
+        {info.steps.map((t) => <li key={t}>{t}</li>)}
+      </ol>
+      <Btn full variant="primary" onClick={onContinue}><Sparkles size={18} /> הכול מוכן, הציגו את הקוד</Btn>
+      <button onClick={onBack} className="text-center text-xs font-bold" style={{ color: COLORS.muted }}>חזרה</button>
+    </div>
+  );
+}
+
 export default function HostApp({ onExit, kind = "tv" }) {
+  const [setupDone, setSetupDone] = useState(false);
   const [roomCode] = useState(() => generateRoomCode());
   const [room, localDispatch] = useReducer(roomReducer, null, createInitialRoom);
   const channelRef = useRef(null);
@@ -397,6 +434,8 @@ export default function HostApp({ onExit, kind = "tv" }) {
     el.style.fontSize = "clamp(16px, 2.3vh, 44px)";
     return () => { el.style.fontSize = before; };
   }, []);
+
+  if (!setupDone) return <HostSetup kind={kind} onContinue={() => setSetupDone(true)} onBack={onExit} />;
 
   return (
     <>
