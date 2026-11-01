@@ -5,6 +5,7 @@ import { COLORS } from "../../constants/theme";
 import { createRoomChannel, generateId, normalizeRoomCode } from "../../utils/roomSync";
 import { Btn, GlassCard, Avatar, Logo, PartyCard } from "../common/UIComponents";
 import { Podium } from "./Podium";
+import RemoteControl from "./RemoteControl";
 
 /* ============================================================================
    PLAYER — views
@@ -211,6 +212,7 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
   const [myId] = useState(() => generateId());
   const [room, setRoom] = useState(null);
   const [connecting, setConnecting] = useState(true);
+  const [remote, setRemote] = useState(false);
   const channelRef = useRef(null);
 
   useEffect(() => {
@@ -284,8 +286,22 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
 
   return (
     <>
-      <PlayerScreen room={room} dispatch={dispatch} myId={myId} name={name} />
-      {room.paused && <PausedOverlay />}
+      {remote ? (
+        <RemoteControl room={room} dispatch={dispatch} />
+      ) : (
+        <>
+          <PlayerScreen room={room} dispatch={dispatch} myId={myId} name={name} />
+          {room.paused && <PausedOverlay />}
+        </>
+      )}
+      {/* Turns this phone into the host's remote (and back), so the host does not have to use the TV itself. */}
+      <button
+        onClick={() => setRemote(!remote)}
+        className="fixed bottom-3 left-3 z-[70] rounded-full border px-3 py-1.5 text-[11px] font-bold"
+        style={{ borderColor: remote ? COLORS.amber : COLORS.border, background: remote ? COLORS.amber : "rgba(9,13,22,0.85)", color: remote ? "#0b0f1a" : COLORS.muted }}
+      >
+        {remote ? "חזרה למסך שלי" : "🎛 שלט מנחה"}
+      </button>
     </>
   );
 }
