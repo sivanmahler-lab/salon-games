@@ -1,12 +1,14 @@
 import React, { useState } from "react";
-import { QrCode, Smartphone, Wifi } from "lucide-react";
+import { QrCode, Smartphone, Wifi, HelpCircle } from "lucide-react";
 import { COLORS } from "../../constants/theme";
 import { Logo, GlassCard, Btn } from "../common/UIComponents";
+import HowToPlay from "../common/HowToPlay";
 
 export default function EntryScreen({ onHost, onJoin, onSolo, prefillCode }) {
   const [sub, setSub] = useState(prefillCode ? "join" : "choose");
   const [code, setCode] = useState(prefillCode || "");
   const [name, setName] = useState("");
+  const [help, setHelp] = useState(false);
 
   const canJoin = code.trim().length > 0 && name.trim().length > 0;
 
@@ -51,19 +53,23 @@ export default function EntryScreen({ onHost, onJoin, onSolo, prefillCode }) {
   }
 
   return (
-    <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col items-center justify-center gap-8 px-6 py-10 text-center">
+    <div className="relative z-10 mx-auto flex min-h-[100dvh] max-w-md flex-col items-center justify-center gap-6 px-6 py-8 text-center">
       <Logo size="text-4xl" />
-      <p className="text-sm" style={{ color: COLORS.muted }}>
-        מכשיר אחד מארח את הערב (המסך הראשי), וכל השאר מצטרפים מהטלפונים שלהם.
-      </p>
+      <div className="space-y-2">
+        <p className="text-lg font-black" style={{ color: COLORS.text }}>משחקי חברה לערב בסלון</p>
+        <p className="text-sm leading-relaxed" style={{ color: COLORS.muted }}>
+          מי אני, הפסיכולוג ואליאס. מכשיר אחד מארח את הערב (מחשב או טלוויזיה), וכל השחקנים מצטרפים מהטלפונים שלהם. בלי התקנות.
+        </p>
+      </div>
       <div className="w-full space-y-3">
         <Btn full variant="primary" onClick={onHost}><QrCode size={18} /> אירוח ערב — המסך הראשי</Btn>
         <Btn full variant="gold" onClick={() => setSub("join")}><Wifi size={18} /> הצטרפות מהטלפון שלי</Btn>
         <Btn full variant="ghost" onClick={onSolo}><Smartphone size={18} /> טלפון אחד באמצע החדר</Btn>
       </div>
-      <p className="text-[11px]" style={{ color: COLORS.muted }}>
-        לבדיקה מקומית: פתחו את שני המצבים בכרטיסיות שונות באותו דפדפן — הם מתסנכרנים באופן מיידי.
-      </p>
+      <button onClick={() => setHelp(true)} className="flex items-center gap-2 rounded-2xl border px-5 py-3 text-sm font-black" style={{ borderColor: COLORS.purple, color: COLORS.text, background: `${COLORS.purple}1a` }}>
+        <HelpCircle size={18} color={COLORS.purple} /> איך משחקים? הוראות לכל משחק
+      </button>
+      {help && <HowToPlay onClose={() => setHelp(false)} />}
     </div>
   );
 }
