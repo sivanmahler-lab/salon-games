@@ -7,6 +7,7 @@ import { Btn, GlassCard, Avatar, Logo, PartyCard } from "../common/UIComponents"
 import { Podium } from "./Podium";
 import RemoteControl from "./RemoteControl";
 import { LEXICON } from "../../data/lexicon";
+import { useEndBeep } from "../../utils/soloHelpers";
 
 /* ============================================================================
    PLAYER — views
@@ -30,6 +31,7 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
   const w = room.whoami;
   const turnPlayer = room.players[w.turnIdx];
   const isGuesser = turnPlayer?.id === myId;
+  useEndBeep(w.timeLeft, turnPlayer?.id === myId);
 
   if (w.phase === "ready") {
     return (
@@ -83,6 +85,7 @@ export function PlayerAlias({ room, dispatch, myId }) {
   const a = room.alias;
   const turnPlayer = room.players[a.turnIdx];
   const isDescriber = turnPlayer?.id === myId;
+  useEndBeep(a.timeLeft, isDescriber);
   const [dragX, setDragX] = useState(0);
 
   if (a.phase === "ready") {
@@ -196,8 +199,8 @@ export function PlayerLexicon({ room, dispatch, myId }) {
     return (
       <div className={wrapCls}>
         {head}
-        <p className="shrink-0 text-center text-sm" style={{ color: COLORS.muted }}>איזו הגדרה אמיתית? הקישו כדי להצביע</p>
-        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+        <p className="shrink-0 text-center text-sm" style={{ color: COLORS.muted }}>המנחה מקריא את ההגדרות. הקישו על המספר של ההגדרה שנראית לכם אמיתית</p>
+        <div className="grid min-h-0 flex-1 content-center grid-cols-3 gap-3 overflow-y-auto landscape:grid-cols-5">
           {L.options.map((o, i) => {
             const own = o.owner === myId;
             const chosen = myVote === o.id;
@@ -205,11 +208,13 @@ export function PlayerLexicon({ room, dispatch, myId }) {
               <button
                 key={o.id}
                 disabled={own}
+                aria-label={`הגדרה ${i + 1}${own ? " (שלך)" : ""}`}
                 onClick={() => dispatch({ type: "LEX_VOTE", id: myId, option: o.id })}
-                className="w-full rounded-2xl border-2 p-3 text-right text-sm font-bold disabled:opacity-40"
-                style={{ borderColor: chosen ? COLORS.sky : COLORS.border, background: chosen ? `${COLORS.sky}22` : COLORS.surface, color: COLORS.text }}
+                className="flex aspect-square flex-col items-center justify-center rounded-2xl border-2 text-3xl font-black disabled:opacity-30"
+                style={{ borderColor: chosen ? COLORS.sky : COLORS.border, background: chosen ? `${COLORS.sky}33` : COLORS.surface, color: chosen ? COLORS.sky : COLORS.text }}
               >
-                <span style={{ color: COLORS.sky }}>{i + 1}. </span>{o.text}{own ? " (שלך)" : ""}
+                {i + 1}
+                {own && <span className="text-[0.6rem] font-bold" style={{ color: COLORS.muted }}>שלך</span>}
               </button>
             );
           })}

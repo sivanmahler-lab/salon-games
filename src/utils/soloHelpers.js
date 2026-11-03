@@ -61,20 +61,36 @@ export function beep() {
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 660;
-    gain.gain.value = 0.2;
-    osc.start();
-    setTimeout(() => {
-      osc.stop();
-      ctx.close();
-    }, 400);
+    if (ctx.resume) ctx.resume();
+    // three short beeps: "time is up"
+    [0, 0.28, 0.56].forEach((t) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "square";
+      osc.frequency.value = 880;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const at = ctx.currentTime + t;
+      gain.gain.setValueAtTime(0.0001, at);
+      gain.gain.exponentialRampToValueAtTime(0.25, at + 0.01);
+      gain.gain.setValueAtTime(0.25, at + 0.16);
+      gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.2);
+      osc.start(at);
+      osc.stop(at + 0.22);
+    });
+    setTimeout(() => { try { ctx.close(); } catch (e) { /* closed */ } }, 1200);
   } catch (e) {
     /* no sound available */
   }
+}
+
+/* Plays the end beep once, when a running countdown reaches zero. */
+export function useEndBeep(timeLeft, enabled = true) {
+  const prev = useRef(timeLeft);
+  useEffect(() => {
+    if (enabled && prev.current > 0 && timeLeft === 0) beep();
+    prev.current = timeLeft;
+  }, [timeLeft, enabled]);
 }
 
 export function lsGet(key) {

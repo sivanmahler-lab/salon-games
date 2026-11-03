@@ -8,6 +8,7 @@ import { createRoomChannel, generateRoomCode, normalizeRoomCode, roomReducer, cr
 import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar } from "../common/UIComponents";
 import { Podium } from "./Podium";
 import { notifyJoin } from "../../utils/notify";
+import { useEndBeep } from "../../utils/soloHelpers";
 import { LEXICON } from "../../data/lexicon";
 
 /* ============================================================================
@@ -156,6 +157,7 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
   const g = room[gameKey];
   const turnPlayer = room.players[g.turnIdx];
   const nextPlayer = room.players[(g.turnIdx + 1) % room.players.length];
+  useEndBeep(g.timeLeft);
 
   return (
     <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 md:max-w-xl landscape:max-w-5xl">
@@ -303,11 +305,12 @@ export function HostLexicon({ room, dispatch, onBack }) {
 
         {L.phase === "vote" && (
           <>
-            <p className="text-sm" style={{ color: COLORS.muted }}>איזו הגדרה אמיתית? מצביעים בטלפון ({voted.length} מתוך {room.players.length})</p>
-            <div className="grid min-h-0 w-full gap-2 overflow-y-auto landscape:grid-cols-2">
+            <p className="text-sm" style={{ color: COLORS.muted }}>המנחה מקריא את ההגדרות בקול, ומצביעים בטלפון על המספר ({voted.length} מתוך {room.players.length})</p>
+            <div className="grid min-h-0 w-full gap-3 overflow-y-auto landscape:grid-cols-2">
               {L.options.map((o, i) => (
-                <div key={o.id} className="rounded-2xl border p-3 text-right text-sm font-bold" style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.text }}>
-                  <span style={{ color: COLORS.sky }}>{i + 1}. </span>{o.text}
+                <div key={o.id} className="flex items-center gap-3 rounded-2xl border p-3 text-right font-bold" style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.text }}>
+                  <span className="flex h-[2.2em] w-[2.2em] shrink-0 items-center justify-center rounded-full text-lg font-black" style={{ background: `${COLORS.sky}33`, color: COLORS.sky }}>{i + 1}</span>
+                  <span className="flex-1 text-base">{o.text}</span>
                 </div>
               ))}
             </div>
