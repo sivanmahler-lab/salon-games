@@ -107,6 +107,32 @@ export default function RemoteControl({ room, dispatch, onClose }) {
     );
   }
 
+  if (screen === "lexicon") {
+    const L = room.lexicon;
+    return (
+      <div className={wrap}>
+        {header}
+        <Title>לקסיקון לועזי-עברי</Title>
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+          {L.phase === "write" && (
+            <>
+              <p className="text-sm" style={{ color: COLORS.muted }}>{Object.keys(L.defs).length} מתוך {room.players.length} שלחו הגדרה</p>
+              <Btn full variant="primary" disabled={Object.keys(L.defs).length < 1} onClick={() => dispatch({ type: "LEX_TO_VOTE" })}>עוברים להצבעה</Btn>
+            </>
+          )}
+          {L.phase === "vote" && (
+            <>
+              <p className="text-sm" style={{ color: COLORS.muted }}>{Object.keys(L.votes).length} מתוך {room.players.length} הצביעו</p>
+              <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_REVEAL" })}>חשפו את התשובה</Btn>
+            </>
+          )}
+          {L.phase === "result" && <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_NEXT" })}>מילה הבאה</Btn>}
+        </div>
+        <Btn full variant="ghost" className="shrink-0" onClick={back}><Home size={18} /> מרכז המשחקים</Btn>
+      </div>
+    );
+  }
+
   if (screen === "shrink") {
     const s = room.shrink;
     return (

@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { GAME_DEFS } from "../constants/theme";
 import { shuffle, buildCharacters, buildShrinkRule, buildAliasDeck } from "../data/datasets";
+import { LEXICON } from "../data/lexicon";
 
 /* ----------------------------------------------------------------------------
    ROOM SYNC ADAPTER
@@ -112,6 +113,37 @@ function startTurnGameState(players, deck) {
   return { deck, turnIdx: 0, cursor: 0, phase: "ready", timeLeft: 60, correct: 0, skips: 0 };
 }
 
+/* ---- Lexicon (foreign word -> Hebrew meaning): each player invents a definition, everyone votes for the real one ---- */
+function lexiconRound(deck, cursor) {
+  const c = cursor % deck.length;
+  return { deck, cursor: c, wordIdx: deck[c], phase: "write", defs: {}, options: [], votes: {}, gains: {} };
+}
+function lexiconToVote(room) {
+  const L = room.lexicon;
+  const real = LEXICON[L.wordIdx].d;
+  const options = shuffle([
+    { id: "real", text: real, owner: null },
+    ...room.players.filter((p) => L.defs[p.id]).map((p) => ({ id: "p:" + p.id, text: L.defs[p.id], owner: p.id })),
+  ]);
+  return { ...room, lexicon: { ...L, phase: "vote", options, votes: {} } };
+}
+function lexiconReveal(room) {
+  const L = room.lexicon;
+  const gains = {};
+  Object.entries(L.votes).forEach(([voter, optId]) => {
+    const opt = L.options.find((o) => o.id === optId);
+    if (!opt) return;
+    if (opt.owner === null) gains[voter] = (gains[voter] || 0) + 2; // found the real meaning
+    else gains[opt.owner] = (gains[opt.owner] || 0) + 1; // fooled someone
+  });
+  const players = room.players.map((p) => {
+    const gain = gains[p.id] || 0;
+    const found = L.votes[p.id] === "real" ? 1 : 0;
+    return gain || found ? { ...p, score: p.score + gain, correct: p.correct + found } : p;
+  });
+  return { ...room, players, lexicon: { ...L, phase: "result", gains } };
+}
+
 export function roomReducer(room, action) {
   switch (action.type) {
     case "JOIN": {
@@ -133,7 +165,7 @@ export function roomReducer(room, action) {
       return { ...room, paused: !!action.value };
     case "PLAY_AGAIN": {
       const players = room.players.map((p) => ({ ...p, score: 0, correct: 0, skips: 0, diagnosed: 0 }));
-      return { ...room, players, screen: "hub", paused: false, whoami: null, shrink: null, alias: null };
+      return { ...room, players, screen: "hub", paused: false, whoami: null, shrink: null, alias: null, lexicon: null };
     }
 
     case "START_GAME": {
@@ -147,7 +179,43 @@ export function roomReducer(room, action) {
       if (action.game === "shrink") {
         return { ...room, screen: "shrink", shrink: { phase: "select", psychId: null, rule: "", clues: 0, found: false, totalScore: 0 } };
       }
+      if (action.game === "lexicon") {
+        return { ...room, screen: "lexicon", lexicon: lexiconRound(shuffle(LEXICON.map((_, i) => i)), 0) };
+      }
       return room;
+    }
+
+    case "LEX_SUBMIT": {
+      const L = room.lexicon;
+      if (!L || L.phase !== "write" || !room.players.some((p) => p.id === action.id)) return room;
+      const text = String(action.text || "").trim().slice(0, 120);
+      if (!text) return room;
+      const defs = { ...L.defs, [action.id]: text };
+      const next = { ...room, lexicon: { ...L, defs } };
+      return room.players.every((p) => defs[p.id]) ? lexiconToVote(next) : next;
+    }
+    case "LEX_TO_VOTE": {
+      const L = room.lexicon;
+      if (!L || L.phase !== "write" || Object.keys(L.defs).length < 1) return room;
+      return lexiconToVote(room);
+    }
+    case "LEX_VOTE": {
+      const L = room.lexicon;
+      if (!L || L.phase !== "vote") return room;
+      const opt = L.options.find((o) => o.id === action.option);
+      if (!opt || opt.owner === action.id || !room.players.some((p) => p.id === action.id)) return room;
+      const votes = { ...L.votes, [action.id]: action.option };
+      const next = { ...room, lexicon: { ...L, votes } };
+      return room.players.every((p) => votes[p.id] || !L.options.some((o) => o.owner !== p.id)) ? lexiconReveal(next) : next;
+    }
+    case "LEX_REVEAL": {
+      const L = room.lexicon;
+      return L && L.phase === "vote" ? lexiconReveal(room) : room;
+    }
+    case "LEX_NEXT": {
+      const L = room.lexicon;
+      if (!L || L.phase !== "result") return room;
+      return { ...room, lexicon: lexiconRound(L.deck, L.cursor + 1) };
     }
 
     case "START_TURN": {

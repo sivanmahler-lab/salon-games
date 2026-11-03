@@ -58,7 +58,7 @@ export default function EntryScreen({ onHost, onJoin, onSolo, prefillCode }) {
       <div className="space-y-2">
         <p className="text-lg font-black" style={{ color: COLORS.text }}>משחקי חברה לערב בסלון</p>
         <p className="text-sm leading-relaxed [@media(max-height:760px)]:hidden" style={{ color: COLORS.muted }}>
-          מי אני, הפסיכולוג ואליאס. בוחרים איך להציג את המסך הראשי, וכל השחקנים מצטרפים מהטלפונים שלהם. בלי התקנות.
+          מי אני, הפסיכולוג, אליאס ולקסיקון לועזי-עברי. בוחרים איך להציג את המסך הראשי, וכל השחקנים מצטרפים מהטלפונים שלהם. בלי התקנות.
         </p>
       </div>
       <div className="w-full">

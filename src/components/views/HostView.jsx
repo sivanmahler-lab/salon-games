@@ -8,6 +8,7 @@ import { createRoomChannel, generateRoomCode, normalizeRoomCode, roomReducer, cr
 import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar } from "../common/UIComponents";
 import { Podium } from "./Podium";
 import { notifyJoin } from "../../utils/notify";
+import { LEXICON } from "../../data/lexicon";
 
 /* ============================================================================
    HOST — views
@@ -260,6 +261,87 @@ export function HostAlias({ room, dispatch, onBack }) {
   );
 }
 
+export function HostLexicon({ room, dispatch, onBack }) {
+  const L = room.lexicon;
+  const entry = LEXICON[L.wordIdx];
+  const nameOf = (id) => room.players.find((p) => p.id === id)?.name || "?";
+  const submitted = room.players.filter((p) => L.defs[p.id]);
+  const voted = room.players.filter((p) => L.votes[p.id]);
+
+  return (
+    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 md:max-w-xl landscape:max-w-5xl">
+      <TopBar
+        title="לקסיקון לועזי-עברי (מסך מנחה)"
+        onBack={onBack}
+        right=""
+        helpTitle="איך משחקים ב'לקסיקון לועזי-עברי'"
+        helpSteps={[
+          "מוצגת מילה לועזית. כל שחקן ממציא בטלפון שלו הגדרה בעברית, בדויה אבל משכנעת.",
+          "כשכולם שלחו, מוצגות כל ההגדרות בערבוב, יחד עם ההגדרה האמיתית. כולם מצביעים בטלפון על ההגדרה שנראית להם אמיתית.",
+          "מי שמצא את ההגדרה האמיתית מקבל 2 נקודות. מי שההגדרה הבדויה שלו קיבלה קולות מקבל נקודה על כל קול.",
+        ]}
+      />
+
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-center">
+        <div className="text-xs font-bold" style={{ color: COLORS.sky }}>המילה הלועזית</div>
+        <div className="font-black" style={{ color: COLORS.text, fontFamily: "Rubik, sans-serif", fontSize: "clamp(2rem, min(10vw, 12vh), 5rem)" }}>{entry.w}</div>
+
+        {L.phase === "write" && (
+          <>
+            <p className="text-sm" style={{ color: COLORS.muted }}>כל אחד כותב בטלפון הגדרה בדויה שנשמעת אמיתית</p>
+            <div className="text-lg font-black" style={{ color: COLORS.amber }}>{submitted.length} מתוך {room.players.length} שלחו</div>
+            <div className="flex flex-wrap justify-center gap-2">
+              {room.players.map((p, i) => (
+                <div key={p.id} className="flex items-center gap-2 rounded-xl border px-2.5 py-1 text-xs font-bold" style={{ borderColor: L.defs[p.id] ? COLORS.emerald : COLORS.border, color: L.defs[p.id] ? COLORS.emerald : COLORS.muted }}>
+                  <Avatar index={i} name={p.name} /> {p.name} {L.defs[p.id] ? "✓" : ""}
+                </div>
+              ))}
+            </div>
+            <Btn variant="primary" disabled={submitted.length < 1} onClick={() => dispatch({ type: "LEX_TO_VOTE" })}><ArrowLeft size={18} /> כולם סיימו? עוברים להצבעה</Btn>
+          </>
+        )}
+
+        {L.phase === "vote" && (
+          <>
+            <p className="text-sm" style={{ color: COLORS.muted }}>איזו הגדרה אמיתית? מצביעים בטלפון ({voted.length} מתוך {room.players.length})</p>
+            <div className="grid min-h-0 w-full gap-2 overflow-y-auto landscape:grid-cols-2">
+              {L.options.map((o, i) => (
+                <div key={o.id} className="rounded-2xl border p-3 text-right text-sm font-bold" style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.text }}>
+                  <span style={{ color: COLORS.sky }}>{i + 1}. </span>{o.text}
+                </div>
+              ))}
+            </div>
+            <Btn variant="primary" onClick={() => dispatch({ type: "LEX_REVEAL" })}><Eye size={18} /> חשפו את התשובה</Btn>
+          </>
+        )}
+
+        {L.phase === "result" && (
+          <>
+            <div className="grid min-h-0 w-full gap-2 overflow-y-auto landscape:grid-cols-2">
+              {L.options.map((o) => {
+                const who = room.players.filter((p) => L.votes[p.id] === o.id).map((p) => p.name);
+                const real = o.owner === null;
+                return (
+                  <div key={o.id} className="rounded-2xl border p-3 text-right text-sm" style={{ borderColor: real ? COLORS.emerald : COLORS.border, background: real ? `${COLORS.emerald}1a` : COLORS.surface }}>
+                    <div className="font-bold" style={{ color: COLORS.text }}>{o.text}</div>
+                    <div className="mt-1 text-xs" style={{ color: real ? COLORS.emerald : COLORS.muted }}>
+                      {real ? "✓ ההגדרה האמיתית" : `הומצאה על ידי ${nameOf(o.owner)}`}{who.length ? ` · הצביעו: ${who.join(", ")}` : ""}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="flex flex-wrap justify-center gap-3 text-xs font-bold" style={{ color: COLORS.amber }}>
+              {room.players.filter((p) => L.gains[p.id]).map((p) => <span key={p.id}>{p.name} +{L.gains[p.id]}</span>)}
+            </div>
+            <Btn variant="primary" onClick={() => dispatch({ type: "LEX_NEXT" })}><ArrowLeft size={18} /> מילה הבאה</Btn>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function HostShrink({ room, dispatch, onBack }) {
   const s = room.shrink;
   const psych = room.players.find((p) => p.id === s.psychId);
@@ -442,6 +524,7 @@ export default function HostApp({ onExit, kind = "tv" }) {
       {room.screen === "lobby" && <HostLobby room={room} dispatch={localDispatch} roomCode={roomCode} onExit={onExit} kind={kind} />}
       {room.screen === "hub" && <HostHub room={room} dispatch={localDispatch} onPodium={() => localDispatch({ type: "GO_PODIUM" })} onLobby={() => localDispatch({ type: "BACK_TO_LOBBY" })} />}
       {room.screen === "whoami" && <HostWhoAmI room={room} dispatch={localDispatch} onBack={backToHub} />}
+      {room.screen === "lexicon" && <HostLexicon room={room} dispatch={localDispatch} onBack={backToHub} />}
       {room.screen === "shrink" && <HostShrink room={room} dispatch={localDispatch} onBack={backToHub} />}
       {room.screen === "alias" && <HostAlias room={room} dispatch={localDispatch} onBack={backToHub} />}
       {room.screen === "podium" && <HostPodium room={room} dispatch={localDispatch} onExit={onExit} />}

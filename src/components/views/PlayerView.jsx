@@ -6,6 +6,7 @@ import { createRoomChannel, generateId, normalizeRoomCode } from "../../utils/ro
 import { Btn, GlassCard, Avatar, Logo, PartyCard } from "../common/UIComponents";
 import { Podium } from "./Podium";
 import RemoteControl from "./RemoteControl";
+import { LEXICON } from "../../data/lexicon";
 
 /* ============================================================================
    PLAYER — views
@@ -148,6 +149,84 @@ export function PlayerAlias({ room, dispatch, myId }) {
       <div className="text-lg font-black" style={{ color: COLORS.text }}>{turnPlayer.name} מסביר/ה מילה. נחשו בקול מה המילה!</div>
       <div className="flex gap-6 text-sm font-bold">
         <span style={{ color: COLORS.emerald }}>✓ {a.correct} נכונות בתור הזה</span>
+      </div>
+    </div>
+  );
+}
+
+export function PlayerLexicon({ room, dispatch, myId }) {
+  const L = room.lexicon;
+  const entry = LEXICON[L.wordIdx];
+  const [text, setText] = useState("");
+  const mine = L.defs[myId];
+  const myVote = L.votes[myId];
+  const gain = L.gains?.[myId] || 0;
+  const roundKey = `${L.cursor}`;
+  useEffect(() => { setText(""); }, [roundKey]);
+
+  const head = (
+    <div className="shrink-0 text-center">
+      <div className="text-xs font-bold" style={{ color: COLORS.sky }}>המילה הלועזית</div>
+      <div className="font-black" style={{ color: COLORS.text, fontFamily: "Rubik, sans-serif", fontSize: "clamp(1.8rem, min(10vw, 9vh), 3rem)" }}>{entry.w}</div>
+    </div>
+  );
+  const wrapCls = "relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col gap-3 overflow-hidden px-5 py-4 landscape:max-w-3xl";
+
+  if (L.phase === "write") {
+    return (
+      <div className={wrapCls}>
+        {head}
+        <p className="shrink-0 text-center text-sm" style={{ color: COLORS.muted }}>המציאו הגדרה בעברית שנשמעת אמיתית. האחרים ינסו לנחש מה האמיתי.</p>
+        <textarea
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          maxLength={120}
+          placeholder="הכתבו כאן את ההגדרה"
+          aria-label="ההגדרה שלך"
+          className="min-h-0 flex-1 resize-none rounded-2xl border-2 bg-transparent p-3 text-lg font-bold outline-none focus:border-[#a855f7]"
+          style={{ borderColor: mine ? COLORS.emerald : COLORS.purple, color: COLORS.text }}
+        />
+        <Btn full variant="primary" disabled={!text.trim()} onClick={() => dispatch({ type: "LEX_SUBMIT", id: myId, text })}>{mine ? "עדכון ההגדרה" : "שליחה"}</Btn>
+        {mine && <p className="shrink-0 text-center text-xs" style={{ color: COLORS.emerald }}>ההגדרה נשלחה ✓ אפשר לעדכן עד שכולם מסיימים</p>}
+      </div>
+    );
+  }
+
+  if (L.phase === "vote") {
+    return (
+      <div className={wrapCls}>
+        {head}
+        <p className="shrink-0 text-center text-sm" style={{ color: COLORS.muted }}>איזו הגדרה אמיתית? הקישו כדי להצביע</p>
+        <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
+          {L.options.map((o, i) => {
+            const own = o.owner === myId;
+            const chosen = myVote === o.id;
+            return (
+              <button
+                key={o.id}
+                disabled={own}
+                onClick={() => dispatch({ type: "LEX_VOTE", id: myId, option: o.id })}
+                className="w-full rounded-2xl border-2 p-3 text-right text-sm font-bold disabled:opacity-40"
+                style={{ borderColor: chosen ? COLORS.sky : COLORS.border, background: chosen ? `${COLORS.sky}22` : COLORS.surface, color: COLORS.text }}
+              >
+                <span style={{ color: COLORS.sky }}>{i + 1}. </span>{o.text}{own ? " (שלך)" : ""}
+              </button>
+            );
+          })}
+        </div>
+        <p className="shrink-0 text-center text-xs" style={{ color: myVote ? COLORS.emerald : COLORS.muted }}>{myVote ? "ההצבעה נקלטה ✓ אפשר לשנות" : "עוד לא הצבעת"}</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={wrapCls}>
+      {head}
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-center">
+        <div className="text-xs font-bold" style={{ color: COLORS.emerald }}>ההגדרה האמיתית</div>
+        <div className="rounded-2xl border-2 p-4 text-base font-black" style={{ borderColor: COLORS.emerald, background: `${COLORS.emerald}1a`, color: COLORS.text }}>{entry.d}</div>
+        <div className="text-lg font-black" style={{ color: gain ? COLORS.amber : COLORS.muted }}>{gain ? `קיבלת ${gain} ${gain === 1 ? "נקודה" : "נקודות"}` : "הפעם בלי נקודות"}</div>
+        <p className="text-xs" style={{ color: COLORS.muted }}>ממתינים שהמנחה יעבור למילה הבאה...</p>
       </div>
     </div>
   );
@@ -325,6 +404,7 @@ function PlayerScreen({ room, dispatch, myId, name }) {
   if (room.screen === "lobby") return <PlayerWaiting room={room} myName={name} label="ממתינים שהמנחה יתחיל את הערב..." />;
   if (room.screen === "hub") return <PlayerWaiting room={room} myName={name} label="המנחה בוחר/ת משחק..." />;
   if (room.screen === "whoami") return <PlayerWhoAmI room={room} dispatch={dispatch} myId={myId} />;
+  if (room.screen === "lexicon") return <PlayerLexicon room={room} dispatch={dispatch} myId={myId} />;
   if (room.screen === "shrink") return <PlayerShrink room={room} dispatch={dispatch} myId={myId} />;
   if (room.screen === "alias") return <PlayerAlias room={room} dispatch={dispatch} myId={myId} />;
   if (room.screen === "podium") return <Podium players={room.players} actions={<p className="text-center text-xs" style={{ color: COLORS.muted }}>ממתינים שהמנחה יחליט מה הלאה...</p>} />;

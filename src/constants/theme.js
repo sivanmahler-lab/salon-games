@@ -1,4 +1,4 @@
-import { Users, Flame, Star, PartyPopper, Zap, Brain, Stethoscope } from "lucide-react";
+import { Users, Flame, Star, PartyPopper, Zap, Brain, Stethoscope, BookOpen } from "lucide-react";
 
 /* ============================================================================
    SALON (סלון) — theme & static config
@@ -14,6 +14,7 @@ export const COLORS = {
   amber: "#f59e0b",
   purple: "#a855f7",
   coral: "#f43f5e",
+  sky: "#38bdf8",
   text: "#f4f6fb",
   muted: "#94a3b8",
 };
@@ -39,4 +40,5 @@ export const GAME_DEFS = [
   { id: "whoami", title: "מי אני?", desc: "דמות מצחיקה — כולם רואים חוץ מהמנחש/ת", icon: Brain, color: COLORS.purple },
   { id: "shrink", title: "הפסיכולוג", desc: "כלל התנהגות סודי לכל אחד, אחד/ת מאבחן/ת", icon: Stethoscope, color: COLORS.emerald },
   { id: "alias", title: "אליאס סלון", desc: "60 שניות, מסבירים מילה בלי להגיד אותה", icon: Zap, color: COLORS.amber },
+  { id: "lexicon", title: "לקסיקון לועזי-עברי", desc: "מילה לועזית אחת, כולם ממציאים לה הגדרה, ומנחשים את האמיתית", icon: BookOpen, color: COLORS.sky },
 ];
