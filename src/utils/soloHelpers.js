@@ -108,3 +108,12 @@ export function lsSet(key, value) {
     /* storage blocked */
   }
 }
+
+/* Plays the beep once each time `cond` turns from false to true (not on first render). */
+export function useBeepWhen(cond) {
+  const prev = useRef(cond);
+  useEffect(() => {
+    if (cond && !prev.current) beep();
+    prev.current = cond;
+  }, [cond]);
+}

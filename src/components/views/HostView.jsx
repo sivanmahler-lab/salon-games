@@ -8,7 +8,7 @@ import { createRoomChannel, generateRoomCode, normalizeRoomCode, roomReducer, cr
 import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar } from "../common/UIComponents";
 import { Podium } from "./Podium";
 import { notifyJoin } from "../../utils/notify";
-import { useEndBeep } from "../../utils/soloHelpers";
+import { useEndBeep, useBeepWhen } from "../../utils/soloHelpers";
 import { LEXICON } from "../../data/lexicon";
 
 /* ============================================================================
@@ -269,6 +269,7 @@ export function HostLexicon({ room, dispatch, onBack }) {
   const nameOf = (id) => room.players.find((p) => p.id === id)?.name || "?";
   const submitted = room.players.filter((p) => L.defs[p.id]);
   const voted = room.players.filter((p) => L.votes[p.id]);
+  useBeepWhen(room.players.length > 0 && voted.length === room.players.length);
 
   return (
     <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 md:max-w-xl landscape:max-w-5xl">
@@ -349,6 +350,7 @@ export function HostShrink({ room, dispatch, onBack }) {
   const s = room.shrink;
   const psych = room.players.find((p) => p.id === s.psychId);
   const others = room.players.filter((p) => p.id !== s.psychId);
+  useBeepWhen(!!s.found);
 
   return (
     <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 md:max-w-xl landscape:max-w-5xl">

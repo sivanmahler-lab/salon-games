@@ -7,7 +7,7 @@ import { Btn, GlassCard, Avatar, Logo, PartyCard } from "../common/UIComponents"
 import { Podium } from "./Podium";
 import RemoteControl from "./RemoteControl";
 import { LEXICON } from "../../data/lexicon";
-import { useEndBeep } from "../../utils/soloHelpers";
+import { useEndBeep, useBeepWhen } from "../../utils/soloHelpers";
 
 /* ============================================================================
    PLAYER — views
@@ -240,6 +240,7 @@ export function PlayerLexicon({ room, dispatch, myId }) {
 export function PlayerShrink({ room, dispatch, myId }) {
   const s = room.shrink;
   const isPsych = s.psychId === myId;
+  useBeepWhen(isPsych && !!s.found);
 
   if (s.phase === "select") {
     return (
