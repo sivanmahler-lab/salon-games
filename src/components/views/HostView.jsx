@@ -279,7 +279,7 @@ export function HostLexicon({ room, dispatch, onBack }) {
         right=""
         helpTitle="איך משחקים ב'לקסיקון לועזי-עברי'"
         helpSteps={[
-          "מוצגת מילה לועזית. כל שחקן ממציא בטלפון שלו הגדרה בעברית, בדויה אבל משכנעת.",
+          "מוצגת מילה לועזית. מי שמכיר אותה לוחץ בטלפון על \"מכיר\" והמילה מוחלפת. כשכולם לוחצים \"לא מכיר\", כל שחקן ממציא הגדרה בעברית, בדויה אבל משכנעת.",
           "כשכולם שלחו, מוצגות כל ההגדרות בערבוב, יחד עם ההגדרה האמיתית. כולם מצביעים בטלפון על ההגדרה שנראית להם אמיתית.",
           "מי שמצא את ההגדרה האמיתית מקבל 2 נקודות. מי שההגדרה הבדויה שלו קיבלה קולות מקבל נקודה על כל קול.",
         ]}
@@ -289,6 +289,18 @@ export function HostLexicon({ room, dispatch, onBack }) {
         <div className="text-xs font-bold" style={{ color: COLORS.sky }}>המילה הלועזית</div>
         <div className="font-black" style={{ color: COLORS.text, fontFamily: "Rubik, sans-serif", fontSize: "clamp(2rem, min(10vw, 12vh), 5rem)" }}>{entry.w}</div>
 
+        {L.notice && L.phase === "check" && (
+          <div className="rounded-xl border px-3 py-1.5 text-sm font-bold" style={{ borderColor: COLORS.amber, color: COLORS.amber }}>
+            המילה הקודמת ({L.notice.word}) הייתה מוכרת ל{L.notice.by}, ולכן הוחלפה
+          </div>
+        )}
+        {L.phase === "check" && (
+          <>
+            <p className="text-sm" style={{ color: COLORS.muted }}>מי שמכיר/ה את המילה לוחצ/ת בטלפון על "מכיר". אם מישהו מכיר, מחליפים מילה. כשכולם לוחצים "לא מכיר", מתחילים.</p>
+            <div className="text-lg font-black" style={{ color: COLORS.amber }}>{Object.keys(L.seen || {}).length} מתוך {room.players.length} ענו "לא מכיר"</div>
+            <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_START_WRITE" })}>מתחילים בלי לחכות לכולם</Btn>
+          </>
+        )}
         {L.phase === "write" && (
           <>
             <p className="text-sm" style={{ color: COLORS.muted }}>כל אחד כותב בטלפון הגדרה בדויה שנשמעת אמיתית</p>

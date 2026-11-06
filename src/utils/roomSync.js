@@ -109,14 +109,18 @@ export function createInitialRoom() {
   };
 }
 
-function startTurnGameState(players, deck) {
-  return { deck, turnIdx: 0, cursor: 0, phase: "ready", timeLeft: 60, correct: 0, skips: 0 };
+// Seconds per turn: "מי אני" gets a minute and a half, the explaining game keeps a minute.
+const TURN_SECONDS = { whoami: 90, alias: 60 };
+function startTurnGameState(players, deck, seconds = 60) {
+  return { deck, turnIdx: 0, cursor: 0, phase: "ready", timeLeft: seconds, correct: 0, skips: 0 };
 }
 
 /* ---- Lexicon (foreign word -> Hebrew meaning): each player invents a definition, everyone votes for the real one ---- */
-function lexiconRound(deck, cursor) {
+// Every round opens with a check: anyone who already knows the word says so and the word is swapped for a new one.
+// Only when everybody answers "I don't know it" does the writing start.
+function lexiconRound(deck, cursor, notice = null) {
   const c = cursor % deck.length;
-  return { deck, cursor: c, wordIdx: deck[c], phase: "write", defs: {}, options: [], votes: {}, gains: {} };
+  return { deck, cursor: c, wordIdx: deck[c], phase: "check", seen: {}, notice, defs: {}, options: [], votes: {}, gains: {} };
 }
 function lexiconToVote(room) {
   const L = room.lexicon;
@@ -171,10 +175,10 @@ export function roomReducer(room, action) {
     case "START_GAME": {
       room = { ...room, paused: false };
       if (action.game === "whoami") {
-        return { ...room, screen: "whoami", whoami: startTurnGameState(room.players, buildCharacters()) };
+        return { ...room, screen: "whoami", whoami: startTurnGameState(room.players, buildCharacters(), TURN_SECONDS.whoami) };
       }
       if (action.game === "alias") {
-        return { ...room, screen: "alias", alias: startTurnGameState(room.players, shuffle(buildAliasDeck(room.players))) };
+        return { ...room, screen: "alias", alias: startTurnGameState(room.players, shuffle(buildAliasDeck(room.players)), TURN_SECONDS.alias) };
       }
       if (action.game === "shrink") {
         return { ...room, screen: "shrink", shrink: { phase: "select", psychId: null, rule: "", clues: 0, found: false, totalScore: 0 } };
@@ -185,6 +189,21 @@ export function roomReducer(room, action) {
       return room;
     }
 
+    case "LEX_KNOW": {
+      const L = room.lexicon;
+      const me = room.players.find((p) => p.id === action.id);
+      if (!L || L.phase !== "check" || !me) return room;
+      if (action.known) {
+        return { ...room, lexicon: lexiconRound(L.deck, L.cursor + 1, { word: LEXICON[L.wordIdx].w, by: me.name }) };
+      }
+      const seen = { ...L.seen, [action.id]: "no" };
+      const next = { ...room, lexicon: { ...L, seen } };
+      return room.players.every((p) => seen[p.id]) ? { ...next, lexicon: { ...next.lexicon, phase: "write", notice: null } } : next;
+    }
+    case "LEX_START_WRITE": {
+      const L = room.lexicon;
+      return L && L.phase === "check" ? { ...room, lexicon: { ...L, phase: "write", notice: null } } : room;
+    }
     case "LEX_SUBMIT": {
       const L = room.lexicon;
       if (!L || L.phase !== "write" || !room.players.some((p) => p.id === action.id)) return room;
@@ -222,7 +241,7 @@ export function roomReducer(room, action) {
       const key = action.game;
       const g = room[key];
       if (!g) return room;
-      return { ...room, [key]: { ...g, phase: "playing", timeLeft: 60, correct: 0, skips: 0 } };
+      return { ...room, [key]: { ...g, phase: "playing", timeLeft: TURN_SECONDS[key] || 60, correct: 0, skips: 0 } };
     }
     case "NEXT_TURN": {
       const key = action.game;

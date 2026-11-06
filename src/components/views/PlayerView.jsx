@@ -175,6 +175,30 @@ export function PlayerLexicon({ room, dispatch, myId }) {
   );
   const wrapCls = "relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col gap-3 overflow-hidden px-5 py-4 landscape:max-w-3xl";
 
+  if (L.phase === "check") {
+    const answered = !!L.seen?.[myId];
+    return (
+      <div className={wrapCls}>
+        {head}
+        {L.notice && (
+          <div className="shrink-0 rounded-xl border px-3 py-2 text-center text-sm font-bold" style={{ borderColor: COLORS.amber, color: COLORS.amber }}>
+            המילה הקודמת ({L.notice.word}) הייתה מוכרת ל{L.notice.by}, ולכן הוחלפה
+          </div>
+        )}
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 text-center">
+          <p className="text-lg font-black" style={{ color: COLORS.text }}>האם את/ה מכיר/ה את המילה?</p>
+          {answered ? (
+            <p className="text-sm font-bold" style={{ color: COLORS.emerald }}>ענית "לא מכיר" ✓ מחכים לשאר השחקנים</p>
+          ) : (
+            <p className="text-sm" style={{ color: COLORS.muted }}>אם מישהו מכיר, המילה מוחלפת</p>
+          )}
+        </div>
+        <Btn full variant="primary" disabled={answered} onClick={() => dispatch({ type: "LEX_KNOW", id: myId, known: false })}>לא מכיר/ה</Btn>
+        <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_KNOW", id: myId, known: true })}>מכיר/ה את המילה</Btn>
+      </div>
+    );
+  }
+
   if (L.phase === "write") {
     return (
       <div className={wrapCls}>

@@ -114,6 +114,12 @@ export default function RemoteControl({ room, dispatch, onClose }) {
         {header}
         <Title>לקסיקון לועזי-עברי</Title>
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+          {L.phase === "check" && (
+            <>
+              <p className="text-sm" style={{ color: COLORS.muted }}>{Object.keys(L.seen || {}).length} מתוך {room.players.length} ענו "לא מכיר"</p>
+              <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_START_WRITE" })}>מתחילים בלי לחכות לכולם</Btn>
+            </>
+          )}
           {L.phase === "write" && (
             <>
               <p className="text-sm" style={{ color: COLORS.muted }}>{Object.keys(L.defs).length} מתוך {room.players.length} שלחו הגדרה</p>

@@ -27,7 +27,7 @@ export default function WhoSolo({ onBack }) {
   const [mode, setMode] = useState("one"); // one | multi
   const [stage, setStage] = useState("setup"); // setup | ready | count | play | review
   const [cats, setCats] = useState(() => new Set(CATS));
-  const [time, setTime] = useState(60);
+  const [time, setTime] = useState(90);
   const [names, setNames] = useState("");
   const [players, setPlayers] = useState([]);
   const [totals, setTotals] = useState({});
