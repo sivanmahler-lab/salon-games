@@ -137,7 +137,7 @@ function lexiconReveal(room) {
   Object.entries(L.votes).forEach(([voter, optId]) => {
     const opt = L.options.find((o) => o.id === optId);
     if (!opt) return;
-    if (opt.owner === null) gains[voter] = (gains[voter] || 0) + 2; // found the real meaning
+    if (opt.owner === null) gains[voter] = (gains[voter] || 0) + 1; // found the real meaning: one point
     else gains[opt.owner] = (gains[opt.owner] || 0) + 1; // fooled someone
   });
   const players = room.players.map((p) => {
