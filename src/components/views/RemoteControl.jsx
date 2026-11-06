@@ -88,7 +88,7 @@ export default function RemoteControl({ room, dispatch, onClose }) {
                     <Btn variant="primary" className="!text-lg" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "correct", cursor: g.cursor })}><ThumbsUp size={20} /> הצליח/ה!</Btn>
                   </div>
                 ) : (
-                  <p className="text-center text-xs" style={{ color: COLORS.muted }}>באליאס המסביר לוחץ "נכון" ו"דלג" בטלפון שלו.</p>
+                  <p className="text-center text-xs" style={{ color: COLORS.muted }}>באליאס המסביר מסמן בטלפון שלו מי ניחש ("דלג" למילה אחרת).</p>
                 )}
                 <Btn full variant="subtle" onClick={() => dispatch({ type: "SET_PAUSED", value: true })}><Pause size={18} /> PAUSE</Btn>
               </>
@@ -170,6 +170,7 @@ export default function RemoteControl({ room, dispatch, onClose }) {
             <Trophy size={36} color={COLORS.amber} />
             <div className="font-black" style={{ color: COLORS.text }}>הסיבוב נגמר: {s.totalScore} נקודות</div>
             <p className="text-sm" style={{ color: COLORS.muted }}>הכלל היה: {s.rule}</p>
+            <Btn full variant="primary" onClick={() => dispatch({ type: "SHRINK_NEXT" })}><RefreshCw size={18} /> סבב הבא</Btn>
           </div>
         )}
         <Btn full variant="ghost" className="shrink-0" onClick={back}><Home size={18} /> מרכז המשחקים</Btn>

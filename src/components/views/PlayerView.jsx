@@ -87,6 +87,7 @@ export function PlayerAlias({ room, dispatch, myId }) {
   const isDescriber = turnPlayer?.id === myId;
   useEndBeep(a.timeLeft, isDescriber);
   const [dragX, setDragX] = useState(0);
+  const solo = a.mode !== "teams";
 
   if (a.phase === "ready") {
     return (
@@ -97,7 +98,7 @@ export function PlayerAlias({ room, dispatch, myId }) {
         </div>
         <p className="max-w-xs text-sm leading-relaxed" style={{ color: COLORS.muted }}>
           {isDescriber
-            ? "תראו מילה על המסך. הסבירו אותה בעל פה בלי להגיד אותה, כדי שהאחרים ינחשו. כשניחשו נכון לחצו \"נכון\", ואם אין מושג לחצו \"דלג\". כל מילה נכונה שווה נקודה, ויש 60 שניות."
+            ? "תראו מילה על המסך. הסבירו אותה בעל פה בלי להגיד אותה, כדי שהאחרים ינחשו. ויש 60 שניות. " + (a.mode === "teams" ? "כשחברי הקבוצה ניחשו נכון לחצו \"נכון\" (הנקודה לקבוצה), ואם אין מושג \"דלג\"." : "כשמישהו ניחש נכון לחצו על השם שלו (הנקודה שלו), ואם אין מושג \"דלג\".")
             : "אתם מנחשים! המסביר/ה מתאר/ת מילה בלי להגיד אותה. צעקו תשובות בקול, והוא/היא יסמנו כשניחשתם."}
         </p>
       </div>
@@ -128,7 +129,7 @@ export function PlayerAlias({ room, dispatch, myId }) {
           dragConstraints={{ left: 0, right: 0 }}
           onDrag={(_, info) => setDragX(info.offset.x)}
           onDragEnd={(_, info) => {
-            if (info.offset.x > 100) advance(true);
+            if (info.offset.x > 100 && !solo) advance(true);
             else if (info.offset.x < -100) advance(false);
             else setDragX(0);
           }}
@@ -137,11 +138,25 @@ export function PlayerAlias({ room, dispatch, myId }) {
         >
           <PartyCard big stampColor={COLORS.amber} stampLabel="אליאס">{a.deck[a.cursor]}</PartyCard>
         </motion.div>
-        <div className="grid w-full grid-cols-2 gap-3">
-          <Btn variant="subtle" onClick={() => advance(false)}><SkipForward size={18} /> דלג</Btn>
-          <Btn variant="primary" onClick={() => advance(true)}><Target size={18} /> נכון! (+1)</Btn>
-        </div>
-        <p className="text-center text-xs leading-relaxed" style={{ color: COLORS.muted }}>הסבירו את המילה בקול בלי להגיד אותה. ניחשו נכון: "נכון". לא מצליחים: "דלג". אפשר גם להחליק ימינה (נכון) או שמאלה (דלג).</p>
+        {solo ? (
+          <div className="w-full">
+            <p className="mb-2 text-center text-xs font-bold" style={{ color: COLORS.muted }}>מי ניחש נכון? לחצו על השם:</p>
+            <div className="grid w-full grid-cols-2 gap-2">
+              {room.players.filter((p) => p.id !== myId).map((p) => (
+                <Btn key={p.id} variant="primary" className="!py-2 !text-sm" onClick={() => { dispatch({ type: "ALIAS_GUESS", cursor: a.cursor, guesserId: p.id }); setDragX(0); }}>
+                  {p.name}{a.guessed?.[p.id] ? ` (${a.guessed[p.id]})` : ""}
+                </Btn>
+              ))}
+            </div>
+            <Btn full variant="subtle" className="mt-2" onClick={() => advance(false)}><SkipForward size={18} /> דלג (אף אחד לא ניחש)</Btn>
+          </div>
+        ) : (
+          <div className="grid w-full grid-cols-2 gap-3">
+            <Btn variant="subtle" onClick={() => advance(false)}><SkipForward size={18} /> דלג</Btn>
+            <Btn variant="primary" onClick={() => advance(true)}><Target size={18} /> נכון! (+1)</Btn>
+          </div>
+        )}
+        <p className="text-center text-xs leading-relaxed" style={{ color: COLORS.muted }}>{solo ? "הסבירו את המילה בקול בלי להגיד אותה, ואז סמנו מי ניחש." : "הסבירו את המילה בקול בלי להגיד אותה. ניחשו נכון: \"נכון\". לא מצליחים: \"דלג\". אפשר גם להחליק ימינה (נכון) או שמאלה (דלג)."}</p>
       </div>
     );
   }
@@ -301,7 +316,7 @@ export function PlayerShrink({ room, dispatch, myId }) {
           <Trophy size={44} color={COLORS.amber} />
           <div className="text-lg font-black" style={{ color: COLORS.text }}>סיימת עם {s.totalScore} נקודות!</div>
           <p className="text-sm" style={{ color: COLORS.muted }}>הכלל היה: {s.rule}</p>
-          <p className="text-sm" style={{ color: COLORS.muted }}>ממתינים שהמנחה יעביר את כולם למרכז המשחקים...</p>
+          <p className="text-sm" style={{ color: COLORS.muted }}>ממתינים שהמנחה יתחיל סבב נוסף או יחזור למרכז המשחקים...</p>
         </div>
       );
     }

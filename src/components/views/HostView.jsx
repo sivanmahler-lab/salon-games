@@ -10,6 +10,7 @@ import { Podium } from "./Podium";
 import { notifyJoin } from "../../utils/notify";
 import { useEndBeep, useBeepWhen } from "../../utils/soloHelpers";
 import { LEXICON } from "../../data/lexicon";
+import { TEAM_NAMES, teamTotals } from "../../game/aliasLogic";
 
 /* ============================================================================
    HOST — views
@@ -158,16 +159,26 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
   const turnPlayer = room.players[g.turnIdx];
   const nextPlayer = room.players[(g.turnIdx + 1) % room.players.length];
   useEndBeep(g.timeLeft);
+  const teams = gameKey === "alias" && g.mode === "teams";
+  const totals = teams ? teamTotals(room.players) : [0, 0];
+  const teamName = (idx) => TEAM_NAMES[idx % 2];
 
   return (
     <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 md:max-w-xl landscape:max-w-5xl">
       <TopBar title={`${title} (מסך מנחה)`} onBack={onBack} right={g.phase === "playing" ? `⏱ ${g.timeLeft}` : ""} helpTitle={helpTitle} helpSteps={helpSteps} />
+      {teams && (
+        <div className="flex shrink-0 justify-center gap-4 pt-1 text-sm font-black">
+          {TEAM_NAMES.map((n, i) => (
+            <span key={n} className="rounded-xl border px-3 py-1" style={{ borderColor: i === g.turnIdx % 2 ? COLORS.amber : COLORS.border, color: i === g.turnIdx % 2 ? COLORS.amber : COLORS.muted }}>{n}: {totals[i]}</span>
+          ))}
+        </div>
+      )}
 
       {g.phase === "ready" && (
         <div className="flex flex-1 flex-col items-center justify-center gap-6 text-center">
           <Avatar index={g.turnIdx} name={turnPlayer.name} />
           <div>
-            <div className="text-xl font-black" style={{ color: COLORS.text }}>התור של {turnPlayer.name}!</div>
+            <div className="text-xl font-black" style={{ color: COLORS.text }}>התור של {turnPlayer.name}{teams ? ` (${teamName(g.turnIdx)})` : ""}!</div>
             <p className="mt-2 text-sm" style={{ color: COLORS.muted }}>{readyCopy(turnPlayer.name)}</p>
           </div>
           <Btn variant="primary" onClick={() => dispatch({ type: "START_TURN", game: gameKey })}><Timer size={18} /> התחילו תור</Btn>
@@ -205,7 +216,16 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
       {g.phase === "turnEnd" && (
         <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
           <Trophy size={44} color={COLORS.amber} />
-          <div className="text-xl font-black" style={{ color: COLORS.text }}>{turnPlayer.name} סיים/ה עם {g.correct} נקודות!</div>
+          <div className="text-xl font-black" style={{ color: COLORS.text }}>
+            {gameKey === "alias" && g.mode === "solo"
+              ? `${turnPlayer.name} הסביר/ה ${g.correct} מילים שנוחשו נכון`
+              : `${turnPlayer.name} סיים/ה עם ${g.correct} נקודות!`}
+          </div>
+          {gameKey === "alias" && g.mode === "solo" && (
+            <div className="flex flex-wrap justify-center gap-2 text-sm font-bold" style={{ color: COLORS.amber }}>
+              {room.players.filter((p) => g.guessed?.[p.id]).map((p) => <span key={p.id}>{p.name} +{g.guessed[p.id]}</span>)}
+            </div>
+          )}
           <div className="flex gap-6">
             <div><div className="text-2xl font-black" style={{ color: COLORS.emerald }}>{g.correct}</div><div className="text-xs" style={{ color: COLORS.muted }}>נכונות</div></div>
             <div><div className="text-2xl font-black" style={{ color: COLORS.coral }}>{g.skips}</div><div className="text-xs" style={{ color: COLORS.muted }}>דילוגים</div></div>
@@ -255,9 +275,12 @@ export function HostAlias({ room, dispatch, onBack }) {
       helpSteps={[
         "כל תור שייך לשחקן/ית אחד/ת שמסביר/ה — עכשיו זה מי שמוצג/ת למעלה.",
         "המילה מוצגת רק בטלפון שלו/ה. שאר השחקנים רואים כאן ובטלפונים שלהם רק את הזמן והניקוד.",
-        "המסביר/ה מתאר/ת בלי להגיד את המילה, וכשמנחשים נכון לוחץ/ת בעצמו/ה 'נכון' או 'דלג' בטלפון שלו/ה.",
+        "עד 6 שחקנים: כשמישהו מנחש נכון, המסביר/ה לוחץ/ת בטלפון על שמו, והוא/היא מקבל/ת נקודה. מעל 6 שחקנים: משחקים בשתי קבוצות, והנקודה הולכת לקבוצה של המסביר/ה.",
+        "אם לא מצליחים, המסביר/ה לוחץ/ת 'דלג'.",
       ]}
-      readyCopy={(name) => `${name} יראה/תראה מילה בטלפון שלו/ה בלבד ויסביר/תסביר אותה בעל פה בלי להגיד אותה. שאר השחקנים מנחשים בקול. כל מילה שנוחשה נכון שווה נקודה, ויש 60 שניות.`}
+      readyCopy={(name) => room.alias.mode === "teams"
+        ? `${name} יראה/תראה מילה בטלפון שלו/ה בלבד ויסביר/תסביר אותה בעל פה בלי להגיד אותה. חברי הקבוצה מנחשים בקול, וכל מילה שנוחשה נכון שווה נקודה לקבוצה. יש 60 שניות.`
+        : `${name} יראה/תראה מילה בטלפון שלו/ה בלבד ויסביר/תסביר אותה בעל פה בלי להגיד אותה. שאר השחקנים מנחשים בקול, והמסביר/ה מסמן/ת בטלפון מי ניחש. מי שניחש נכון מקבל נקודה. יש 60 שניות.`}
       playingCopy={(name) => `${name} מסביר/ה עכשיו — שאר השחקנים מנחשים בקול`}
     />
   );
@@ -319,7 +342,14 @@ export function HostLexicon({ room, dispatch, onBack }) {
         {L.phase === "vote" && (
           <>
             <p className="text-sm" style={{ color: COLORS.muted }}>המנחה מקריא את ההגדרות בקול, ומצביעים בטלפון על המספר ({voted.length} מתוך {room.players.length})</p>
-            <div className="grid min-h-0 w-full gap-3 overflow-y-auto landscape:grid-cols-2">
+            <div className="flex flex-wrap justify-center gap-2">
+              {room.players.map((p, i) => (
+                <div key={p.id} className="flex items-center gap-2 rounded-xl border px-2.5 py-1 text-xs font-bold" style={{ borderColor: L.votes[p.id] ? COLORS.emerald : COLORS.border, color: L.votes[p.id] ? COLORS.emerald : COLORS.muted }}>
+                  <Avatar index={i} name={p.name} /> {p.name} {L.votes[p.id] ? "✓" : ""}
+                </div>
+              ))}
+            </div>
+            <div className="grid min-h-0 w-full gap-3 overflow-y-auto landscape:grid-flow-col landscape:[grid-template-rows:repeat(var(--rows),minmax(0,auto))]" style={{ "--rows": Math.ceil(L.options.length / 2) }}>
               {L.options.map((o, i) => (
                 <div key={o.id} className="flex items-center gap-3 rounded-2xl border p-3 text-right font-bold" style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.text }}>
                   <span className="flex h-[2.2em] w-[2.2em] shrink-0 items-center justify-center rounded-full text-lg font-black" style={{ background: `${COLORS.sky}33`, color: COLORS.sky }}>{i + 1}</span>
@@ -333,7 +363,7 @@ export function HostLexicon({ room, dispatch, onBack }) {
 
         {L.phase === "result" && (
           <>
-            <div className="grid min-h-0 w-full gap-2 overflow-y-auto landscape:grid-cols-2">
+            <div className="grid min-h-0 w-full gap-2 overflow-y-auto landscape:grid-flow-col landscape:[grid-template-rows:repeat(var(--rows),minmax(0,auto))]" style={{ "--rows": Math.ceil(L.options.length / 2) }}>
               {L.options.map((o) => {
                 const who = room.players.filter((p) => L.votes[p.id] === o.id).map((p) => p.name);
                 const real = o.owner === null;
@@ -422,7 +452,8 @@ export function HostShrink({ room, dispatch, onBack }) {
           <Trophy size={48} color={COLORS.amber} />
           <div className="text-xl font-black" style={{ color: COLORS.text }}>{psych?.name} סיים/ה עם {s.totalScore} נקודות</div>
           <p className="text-sm" style={{ color: COLORS.muted }}>הכלל היה: {s.rule}</p>
-          <Btn variant="primary" onClick={onBack}><Home size={18} /> חזרה למרכז המשחקים</Btn>
+          <Btn variant="primary" onClick={() => dispatch({ type: "SHRINK_NEXT" })}><RefreshCw size={18} /> סבב הבא</Btn>
+          <button onClick={onBack} className="text-xs font-bold" style={{ color: COLORS.muted }}>חזרה למרכז המשחקים</button>
         </div>
       )}
     </div>

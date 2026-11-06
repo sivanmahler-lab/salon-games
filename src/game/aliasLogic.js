@@ -36,3 +36,12 @@ export function finishAliasTurn({ teams, turn, played, log, penalty, target }) {
   }
   return { teams: nextTeams, turn: nextTurn, played: nextPlayed, stage };
 }
+
+/* Hosted alias with many players: two teams, split by seat (every other player), so turns alternate between the teams. */
+export const TEAM_NAMES = ["קבוצה א׳", "קבוצה ב׳"];
+export const teamIndexOf = (players, id) => Math.max(0, players.findIndex((p) => p.id === id)) % 2;
+export function teamTotals(players) {
+  const totals = [0, 0];
+  players.forEach((p, i) => { totals[i % 2] += p.score || 0; });
+  return totals;
+}

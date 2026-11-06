@@ -111,6 +111,7 @@ export function createInitialRoom() {
 
 // Seconds per turn: "מי אני" gets a minute and a half, the explaining game keeps a minute.
 const TURN_SECONDS = { whoami: 90, alias: 60 };
+export const ALIAS_MAX_SOLO = 6;
 function startTurnGameState(players, deck, seconds = 60) {
   return { deck, turnIdx: 0, cursor: 0, phase: "ready", timeLeft: seconds, correct: 0, skips: 0 };
 }
@@ -178,7 +179,9 @@ export function roomReducer(room, action) {
         return { ...room, screen: "whoami", whoami: startTurnGameState(room.players, buildCharacters(), TURN_SECONDS.whoami) };
       }
       if (action.game === "alias") {
-        return { ...room, screen: "alias", alias: startTurnGameState(room.players, shuffle(buildAliasDeck(room.players)), TURN_SECONDS.alias) };
+        // Up to 6 players: points go to whoever guessed. More than that: two teams, points go to the explainer's team.
+        const mode = room.players.length > ALIAS_MAX_SOLO ? "teams" : "solo";
+        return { ...room, screen: "alias", alias: { ...startTurnGameState(room.players, shuffle(buildAliasDeck(room.players)), TURN_SECONDS.alias), mode, guessed: {} } };
       }
       if (action.game === "shrink") {
         return { ...room, screen: "shrink", shrink: { phase: "select", psychId: null, rule: "", clues: 0, found: false, totalScore: 0 } };
@@ -241,7 +244,7 @@ export function roomReducer(room, action) {
       const key = action.game;
       const g = room[key];
       if (!g) return room;
-      return { ...room, [key]: { ...g, phase: "playing", timeLeft: TURN_SECONDS[key] || 60, correct: 0, skips: 0 } };
+      return { ...room, [key]: { ...g, phase: "playing", timeLeft: TURN_SECONDS[key] || 60, correct: 0, skips: 0, guessed: {} } };
     }
     case "NEXT_TURN": {
       const key = action.game;
@@ -257,9 +260,14 @@ export function roomReducer(room, action) {
       const timeLeft = g.timeLeft - 1;
       if (timeLeft <= 0) {
         const turnPlayer = room.players[g.turnIdx];
-        const players = room.players.map((p) =>
-          p.id === turnPlayer.id ? { ...p, score: p.score + g.correct, correct: p.correct + g.correct, skips: p.skips + g.skips } : p
-        );
+        const solo = key === "alias" && g.mode === "solo";
+        const players = room.players.map((p) => {
+          if (solo) {
+            const n = g.guessed?.[p.id] || 0; // solo alias: the points belong to the players who guessed
+            return { ...p, score: p.score + n, correct: p.correct + n, skips: p.skips + (p.id === turnPlayer.id ? g.skips : 0) };
+          }
+          return p.id === turnPlayer.id ? { ...p, score: p.score + g.correct, correct: p.correct + g.correct, skips: p.skips + g.skips } : p;
+        });
         return { ...room, players, [key]: { ...g, timeLeft: 0, phase: "turnEnd" } };
       }
       return { ...room, [key]: { ...g, timeLeft } };
@@ -268,10 +276,28 @@ export function roomReducer(room, action) {
       const key = action.game;
       const g = room[key];
       if (!g || g.phase !== "playing" || room.paused || action.cursor !== g.cursor) return room; // stale/duplicate tap guard
+      if (key === "alias" && g.mode === "solo" && action.result === "correct") return room; // solo: must say who guessed (ALIAS_GUESS)
       const correct = g.correct + (action.result === "correct" ? 1 : 0);
       const skips = g.skips + (action.result === "skip" ? 1 : 0);
       const cursor = (g.cursor + 1) % g.deck.length;
       return { ...room, [key]: { ...g, correct, skips, cursor } };
+    }
+
+    case "ALIAS_GUESS": {
+      const g = room.alias;
+      if (!g || g.mode !== "solo" || g.phase !== "playing" || room.paused || action.cursor !== g.cursor) return room;
+      const describer = room.players[g.turnIdx];
+      if (!describer || action.guesserId === describer.id || !room.players.some((p) => p.id === action.guesserId)) return room;
+      const guessed = { ...g.guessed, [action.guesserId]: (g.guessed?.[action.guesserId] || 0) + 1 };
+      return { ...room, alias: { ...g, correct: g.correct + 1, guessed, cursor: (g.cursor + 1) % g.deck.length } };
+    }
+
+    case "SHRINK_NEXT": {
+      // another round: the next player in line is suggested as the psychologist, the host can still change it
+      const s = room.shrink;
+      const i = room.players.findIndex((p) => p.id === s?.psychId);
+      const next = room.players[(i + 1) % room.players.length];
+      return { ...room, shrink: { phase: "select", psychId: next?.id || null, rule: "", clues: 0, found: false, totalScore: 0 } };
     }
 
     case "SHRINK_SELECT":
