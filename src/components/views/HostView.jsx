@@ -121,7 +121,7 @@ export function HostHub({ room, dispatch, onPodium, onLobby }) {
         {room.players.length} שחקנים מחוברים — המסך הזה הוא מסך המנחה, בלי סודות עליו 🙈
       </GlassCard>
       <div className="mb-2 shrink-0 text-sm font-bold" style={{ color: COLORS.muted }}>בחרו משחק</div>
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 landscape:grid-cols-3">
+      <div className={`grid min-h-0 flex-1 grid-cols-1 content-start gap-3 overflow-y-auto landscape:content-stretch landscape:overflow-visible ${games.length >= 4 ? "landscape:grid-cols-4" : "landscape:grid-cols-3"}`}>
         {games.map((g) => {
           const Icon = g.icon;
           return (
