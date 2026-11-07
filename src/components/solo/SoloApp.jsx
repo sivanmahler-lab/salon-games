@@ -10,8 +10,8 @@ import PsySolo from "./PsySolo";
 
 const GAMES = [
   { id: "alias", title: "אליאס", desc: "מסבירים מילה בלי להגיד אותה. הקבוצה מנחשת לפני שהזמן נגמר.", meta: "2–4 קבוצות · טיימר · ניקוד", icon: Zap, color: COLORS.amber },
-  { id: "who", title: "מי אני", desc: "הקבוצה נותנת רמזים, אחד מנחש. מקצועות, אוכל, מקומות, ישראלים ועוד.", meta: "חמישה נושאים · טלפון אחד או כל אחד בטלפון שלו", icon: Brain, color: COLORS.purple },
-  { id: "psy", title: "הפסיכולוג", desc: "אחד יוצא מהחדר, כולם מסכימים על חוק סודי, והוא צריך לגלות אותו מהתשובות.", meta: "20 חוקים · שאלות לדוגמה", icon: Stethoscope, color: COLORS.emerald },
+  { id: "who", title: "מי אני", desc: "הקבוצה נותנת רמזים, אחד מנחש. מקצועות, אוכל, מקומות, ישראלים ועוד.", meta: "טלפון אחד או כל אחד בטלפון שלו", icon: Brain, color: COLORS.purple },
+  { id: "psy", title: "הפסיכולוג", desc: "אחד יוצא מהחדר, כולם מסכימים על חוק סודי, והוא צריך לגלות אותו מהתשובות.", meta: "שאלות לדוגמה", icon: Stethoscope, color: COLORS.emerald },
 ];
 
 
