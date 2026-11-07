@@ -244,7 +244,7 @@ export function roomReducer(room, action) {
         return { ...room, screen: "shrink", shrink: { phase: "select", psychId: null, rule: "", clues: 0, found: false, totalScore: 0 } };
       }
       if (action.game === "lexicon") {
-        return { ...room, screen: "lexicon", lexicon: { phase: "level" } };
+        return { ...room, screen: "lexicon", lexicon: lexiconRound(shuffle(LEXICON.map((_, i) => i)), 0) }; // every word, no difficulty choice
       }
       return room;
     }
