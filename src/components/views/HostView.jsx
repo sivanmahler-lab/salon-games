@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { COLORS, CATEGORIES, GAME_DEFS } from "../../constants/theme";
 import { createRoomChannel, generateRoomCode, normalizeRoomCode, roomReducer, createInitialRoom } from "../../utils/roomSync";
-import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar } from "../common/UIComponents";
+import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar, WinBanner } from "../common/UIComponents";
 import { Podium } from "./Podium";
 import { notifyJoin } from "../../utils/notify";
 import { useEndBeep, useBeepWhen } from "../../utils/soloHelpers";
@@ -200,6 +200,7 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
             <span style={{ color: COLORS.emerald }}>נכונות: {g.correct}</span>
             <span style={{ color: COLORS.coral }}>דילוגים: {g.skips}</span>
           </div>
+          {gameKey === "whoami" && <WinBanner won={g.won} />}
           <div style={{ background: `${color}22`, borderColor: color }} className="w-full rounded-2xl border-2 border-dashed p-4">
             <div className="text-lg font-black" style={{ color: COLORS.text }}>{playingCopy(turnPlayer.name)}</div>
           </div>
@@ -275,12 +276,12 @@ export function HostAlias({ room, dispatch, onBack }) {
       helpSteps={[
         "כל תור שייך לשחקן/ית אחד/ת שמסביר/ה — עכשיו זה מי שמוצג/ת למעלה.",
         "המילה מוצגת רק בטלפון שלו/ה. שאר השחקנים רואים כאן ובטלפונים שלהם רק את הזמן והניקוד.",
-        "עד 6 שחקנים: כשמישהו מנחש נכון, המסביר/ה לוחץ/ת בטלפון על שמו, והוא/היא מקבל/ת נקודה. מעל 6 שחקנים: משחקים בשתי קבוצות, והנקודה הולכת לקבוצה של המסביר/ה.",
+        "עד 6 שחקנים: כשמישהו מנחש נכון, המסביר/ה לוחץ/ת בטלפון על שמו, והוא/היא מקבל/ת נקודה (וגם המסביר/ה). מעל 6 שחקנים: משחקים בשתי קבוצות, והנקודה הולכת לקבוצה של המסביר/ה.",
         "אם לא מצליחים, המסביר/ה לוחץ/ת 'דלג'.",
       ]}
       readyCopy={(name) => room.alias.mode === "teams"
         ? `${name} יראה/תראה מילה בטלפון שלו/ה בלבד ויסביר/תסביר אותה בעל פה בלי להגיד אותה. חברי הקבוצה מנחשים בקול, וכל מילה שנוחשה נכון שווה נקודה לקבוצה. יש 60 שניות.`
-        : `${name} יראה/תראה מילה בטלפון שלו/ה בלבד ויסביר/תסביר אותה בעל פה בלי להגיד אותה. שאר השחקנים מנחשים בקול, והמסביר/ה מסמן/ת בטלפון מי ניחש. מי שניחש נכון מקבל נקודה. יש 60 שניות.`}
+        : `${name} יראה/תראה מילה בטלפון שלו/ה בלבד ויסביר/תסביר אותה בעל פה בלי להגיד אותה. שאר השחקנים מנחשים בקול, והמסביר/ה מסמן/ת בטלפון מי ניחש. מי שניחש נכון מקבל נקודה, וגם המסביר/ה מקבל/ת נקודה על כל מילה. יש 60 שניות.`}
       playingCopy={(name) => `${name} מסביר/ה עכשיו — שאר השחקנים מנחשים בקול`}
     />
   );
@@ -444,6 +445,12 @@ export function HostShrink({ room, dispatch, onBack }) {
           <div className="flex items-center gap-2 text-sm font-bold" style={{ color: COLORS.muted }}>
             רמזים: {s.clues} {s.found && <Check size={16} color={COLORS.emerald} />}
           </div>
+          {s.found && s.rule && (
+            <div className="rounded-2xl border-2 px-6 py-4" style={{ borderColor: COLORS.emerald, background: `${COLORS.emerald}22` }}>
+              <div className="text-sm font-bold" style={{ color: COLORS.emerald }}>🎉 {psych?.name} גילה/תה! הכלל היה</div>
+              <div className="text-2xl font-black" style={{ color: COLORS.text }}>{s.rule}</div>
+            </div>
+          )}
         </div>
       )}
 

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Timer, Trophy, ThumbsUp, SkipForward, Target, Stethoscope, Lightbulb, Award, Sparkles, Wifi, WifiOff, Pause } from "lucide-react";
 import { COLORS } from "../../constants/theme";
 import { createRoomChannel, generateId, normalizeRoomCode } from "../../utils/roomSync";
-import { Btn, GlassCard, Avatar, Logo, PartyCard } from "../common/UIComponents";
+import { Btn, GlassCard, Avatar, Logo, PartyCard, WinBanner } from "../common/UIComponents";
 import { Podium } from "./Podium";
 import RemoteControl from "./RemoteControl";
 import { LEXICON } from "../../data/lexicon";
@@ -60,6 +60,7 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
     return (
       <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-6 landscape:gap-2 px-6 text-center">
         <div className="text-2xl font-black" style={{ color: COLORS.amber }}>⏱ {w.timeLeft}</div>
+        <WinBanner won={w.won} />
         <div className="rounded-3xl border-2 border-dashed p-8" style={{ borderColor: COLORS.purple, background: `${COLORS.purple}1a` }}>
           <div className="text-lg font-black leading-relaxed" style={{ color: COLORS.text }}>
             כולם רואים את הדמות שלך חוץ ממך - התחל לנחש!
@@ -76,6 +77,7 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
   return (
     <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-6 landscape:gap-2 px-6">
       <div className="text-center text-lg font-black" style={{ color: COLORS.amber }}>⏱ {w.timeLeft}</div>
+      <WinBanner won={w.won} />
       <PartyCard big stampColor={COLORS.purple} stampLabel="מי אני?">{w.deck[w.cursor]}</PartyCard>
     </div>
   );
@@ -98,7 +100,7 @@ export function PlayerAlias({ room, dispatch, myId }) {
         </div>
         <p className="max-w-xs text-sm leading-relaxed" style={{ color: COLORS.muted }}>
           {isDescriber
-            ? "תראו מילה על המסך. הסבירו אותה בעל פה בלי להגיד אותה, כדי שהאחרים ינחשו. ויש 60 שניות. " + (a.mode === "teams" ? "כשחברי הקבוצה ניחשו נכון לחצו \"נכון\" (הנקודה לקבוצה), ואם אין מושג \"דלג\"." : "כשמישהו ניחש נכון לחצו על השם שלו (הנקודה שלו), ואם אין מושג \"דלג\".")
+            ? "תראו מילה על המסך. הסבירו אותה בעל פה בלי להגיד אותה, כדי שהאחרים ינחשו. ויש 60 שניות. " + (a.mode === "teams" ? "כשחברי הקבוצה ניחשו נכון לחצו \"נכון\" (הנקודה לקבוצה), ואם אין מושג \"דלג\"." : "כשמישהו ניחש נכון לחצו על השם שלו (נקודה לו ונקודה לך), ואם אין מושג \"דלג\".")
             : "אתם מנחשים! המסביר/ה מתאר/ת מילה בלי להגיד אותה. צעקו תשובות בקול, והוא/היא יסמנו כשניחשתם."}
         </p>
       </div>
@@ -301,6 +303,12 @@ export function PlayerShrink({ room, dispatch, myId }) {
           <p className="text-sm leading-relaxed" style={{ color: COLORS.muted }}>
             שאלו שאלות את מי שתרצו משאר השחקנים. כולם מתנהגים לפי אותו כלל סודי, ואתם צריכים לנחש מה הוא.
           </p>
+          {s.found && s.rule && (
+            <div className="w-full rounded-2xl border-2 px-4 py-3" style={{ borderColor: COLORS.emerald, background: `${COLORS.emerald}22` }}>
+              <div className="text-xs font-bold" style={{ color: COLORS.emerald }}>🎉 הכלל היה</div>
+              <div className="text-lg font-black" style={{ color: COLORS.text }}>{s.rule}</div>
+            </div>
+          )}
           <div className="text-xs" style={{ color: COLORS.muted }}>רמזים שנוצלו: {s.clues}</div>
           <div className="grid w-full grid-cols-2 gap-3">
             <Btn variant="subtle" disabled={s.found} onClick={() => dispatch({ type: "SHRINK_CLUE" })}><Lightbulb size={16} /> רמז</Btn>

@@ -244,7 +244,7 @@ export function roomReducer(room, action) {
       const key = action.game;
       const g = room[key];
       if (!g) return room;
-      return { ...room, [key]: { ...g, phase: "playing", timeLeft: TURN_SECONDS[key] || 60, correct: 0, skips: 0, guessed: {} } };
+      return { ...room, [key]: { ...g, phase: "playing", timeLeft: TURN_SECONDS[key] || 60, correct: 0, skips: 0, guessed: {}, won: null } };
     }
     case "NEXT_TURN": {
       const key = action.game;
@@ -264,7 +264,8 @@ export function roomReducer(room, action) {
         const players = room.players.map((p) => {
           if (solo) {
             const n = g.guessed?.[p.id] || 0; // solo alias: the points belong to the players who guessed
-            return { ...p, score: p.score + n, correct: p.correct + n, skips: p.skips + (p.id === turnPlayer.id ? g.skips : 0) };
+            const own = p.id === turnPlayer.id ? g.correct : 0; // the explainer also earns a point for every word guessed
+            return { ...p, score: p.score + n + own, correct: p.correct + n + own, skips: p.skips + (p.id === turnPlayer.id ? g.skips : 0) };
           }
           return p.id === turnPlayer.id ? { ...p, score: p.score + g.correct, correct: p.correct + g.correct, skips: p.skips + g.skips } : p;
         });
@@ -280,7 +281,8 @@ export function roomReducer(room, action) {
       const correct = g.correct + (action.result === "correct" ? 1 : 0);
       const skips = g.skips + (action.result === "skip" ? 1 : 0);
       const cursor = (g.cursor + 1) % g.deck.length;
-      return { ...room, [key]: { ...g, correct, skips, cursor } };
+      const won = key === "whoami" ? (action.result === "correct" ? { word: g.deck[g.cursor], n: (g.won?.n || 0) + 1 } : null) : undefined;
+      return { ...room, [key]: { ...g, correct, skips, cursor, ...(won !== undefined ? { won } : {}) } };
     }
 
     case "ALIAS_GUESS": {

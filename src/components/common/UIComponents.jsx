@@ -224,3 +224,27 @@ export function QRCode({ text, size = 160 }) {
 
   return <canvas ref={canvasRef} className="rounded-lg bg-white p-3" style={{ width: size, height: size }} />;
 }
+
+/* Victory banner for Who Am I: shows the character that was just guessed, for a few seconds. */
+export function WinBanner({ won }) {
+  const [shown, setShown] = useState(false);
+  const n = won?.n;
+  useEffect(() => {
+    if (!won) { setShown(false); return undefined; }
+    setShown(true);
+    const t = setTimeout(() => setShown(false), 4500);
+    return () => clearTimeout(t);
+  }, [n]); // eslint-disable-line react-hooks/exhaustive-deps
+  return (
+    <AnimatePresence>
+      {shown && won && (
+        <motion.div key={n} initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ opacity: 0 }}
+          className="w-full rounded-2xl border-2 px-4 py-3 text-center" style={{ borderColor: COLORS.emerald, background: `${COLORS.emerald}22` }}>
+          <div className="text-2xl">🏆🎉🥳</div>
+          <div className="text-xs font-bold" style={{ color: COLORS.emerald }}>נכון! הדמות הייתה</div>
+          <div className="text-xl font-black" style={{ color: COLORS.text }}>{won.word}</div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
