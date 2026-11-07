@@ -117,8 +117,8 @@ export default function RemoteControl({ room, dispatch, onClose }) {
           {L.phase === "level" && (
             <>
               <p className="text-sm" style={{ color: COLORS.muted }}>בחרו רמת קושי</p>
-              <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_LEVEL", level: "easy" })}>קל</Btn>
-              <Btn full variant="gold" onClick={() => dispatch({ type: "LEX_LEVEL", level: "hard" })}>קשה</Btn>
+              <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_LEVEL", level: "easy" })}>קל (כל המילים, כולל קלות)</Btn>
+              <Btn full variant="gold" onClick={() => dispatch({ type: "LEX_LEVEL", level: "hard" })}>קשה (בלי הקלות)</Btn>
             </>
           )}
           {L.phase === "check" && (

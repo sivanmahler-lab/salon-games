@@ -204,10 +204,10 @@ export function roomReducer(room, action) {
       return room.players.every((p) => seen[p.id]) ? { ...next, lexicon: { ...next.lexicon, phase: "write", notice: null } } : next;
     }
     case "LEX_LEVEL": {
-      // the host picks easy words (marked e) or hard ones (the rest); if a group is empty, everything is used
+      // easy = every word (including the easy ones, marked e); hard = only the words not marked easy
       if (!room.lexicon || room.lexicon.phase !== "level") return room;
       const all = LEXICON.map((_, i) => i);
-      let ids = all.filter((i) => (action.level === "easy" ? !!LEXICON[i].e : !LEXICON[i].e));
+      let ids = action.level === "easy" ? all : all.filter((i) => !LEXICON[i].e);
       if (ids.length < 5) ids = all;
       return { ...room, lexicon: { ...lexiconRound(shuffle(ids), 0), level: action.level } };
     }

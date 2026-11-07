@@ -294,8 +294,8 @@ export function HostLexicon({ room, dispatch, onBack }) {
       <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col items-center justify-center gap-5 px-5 text-center md:max-w-xl">
         <div className="text-2xl font-black" style={{ color: COLORS.text }}>לקסיקון לועזי-עברי</div>
         <p className="text-sm" style={{ color: COLORS.muted }}>בחרו רמת קושי</p>
-        <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_LEVEL", level: "easy" })}>קל: מילים מוכרות יותר</Btn>
-        <Btn full variant="gold" onClick={() => dispatch({ type: "LEX_LEVEL", level: "hard" })}>קשה: מילים נדירות</Btn>
+        <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_LEVEL", level: "easy" })}>קל: כל המילים, כולל הקלות</Btn>
+        <Btn full variant="gold" onClick={() => dispatch({ type: "LEX_LEVEL", level: "hard" })}>קשה: רק המילים הקשות</Btn>
         <Btn variant="ghost" onClick={onBack}>חזרה למרכז המשחקים</Btn>
       </div>
     );
