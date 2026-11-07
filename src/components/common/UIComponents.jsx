@@ -232,6 +232,7 @@ export function WinBanner({ won }) {
   useEffect(() => {
     if (!won) { setShown(false); return undefined; }
     setShown(true);
+    try { if (navigator.vibrate && !window.__salonMute) navigator.vibrate([60, 40, 120]); } catch (e) { /* no vibration */ }
     const t = setTimeout(() => setShown(false), 4500);
     return () => clearTimeout(t);
   }, [n]); // eslint-disable-line react-hooks/exhaustive-deps

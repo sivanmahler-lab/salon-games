@@ -2,14 +2,16 @@ import React from "react";
 import { Minus, Plus } from "lucide-react";
 import { COLORS } from "../../constants/theme";
 import { TopBar } from "../common/UIComponents";
+import ScoreButton from "../common/ScoreButton";
 
 /* Shared pieces for the one-phone games, in the same look as the rest of the app. */
 
-export function SoloScreen({ title, onBack, right, children, center }) {
+export function SoloScreen({ title, onBack, right, children, center, scores }) {
   return (
     <div className="relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-5 pb-10 pt-6 md:max-w-xl">
       <TopBar title={title} onBack={onBack} right={right} />
       <div className={`flex flex-1 flex-col ${center ? "items-center justify-center gap-5 text-center" : ""}`}>{children}</div>
+      {scores && scores.length > 0 && <ScoreButton rows={scores} />}
     </div>
   );
 }

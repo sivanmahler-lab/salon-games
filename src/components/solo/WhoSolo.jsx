@@ -138,7 +138,7 @@ export default function WhoSolo({ onBack }) {
 
   if (stage === "ready") {
     return (
-      <SoloScreen title="מי אני" onBack={onBack}>
+      <SoloScreen title="מי אני" onBack={onBack} scores={stage === "setup" ? null : players.map((p) => ({ name: p, score: totals[p] || 0 }))}>
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
           <Lead color={COLOR}>{players.length ? "התור של" : "מוכנים?"}</Lead>
           <h2 className="text-4xl font-black" style={{ color: COLORS.text, fontFamily: "Rubik, sans-serif" }}>{name}</h2>
@@ -151,7 +151,7 @@ export default function WhoSolo({ onBack }) {
 
   if (stage === "count") {
     return (
-      <SoloScreen title="מי אני" onBack={onBack}>
+      <SoloScreen title="מי אני" onBack={onBack} scores={stage === "setup" ? null : players.map((p) => ({ name: p, score: totals[p] || 0 }))}>
         <Lead color={COLOR}>{name}</Lead>
         <div className="flex flex-1 items-center justify-center">
           <div className="text-[8rem] font-black leading-none" style={{ color: COLOR, fontFamily: "Rubik, sans-serif" }}>{timer.left || "קדימה"}</div>
@@ -163,7 +163,7 @@ export default function WhoSolo({ onBack }) {
   if (stage === "play") {
     const right = log.filter((x) => x.ok).length;
     return (
-      <SoloScreen title="מי אני" onBack={onBack}>
+      <SoloScreen title="מי אני" onBack={onBack} scores={stage === "setup" ? null : players.map((p) => ({ name: p, score: totals[p] || 0 }))}>
         <div className="flex items-baseline justify-between">
           <Clock seconds={timer.left} />
           <div className="text-sm" style={{ color: COLORS.muted }}>נכון <b className="text-lg tabular-nums" style={{ color: COLORS.text }}>{right}</b></div>
@@ -183,7 +183,7 @@ export default function WhoSolo({ onBack }) {
   const right = log.filter((x) => x.ok).length;
   const ranking = players.slice().sort((a, b) => (totals[b] || 0) - (totals[a] || 0));
   return (
-    <SoloScreen title="מי אני" onBack={onBack}>
+    <SoloScreen title="מי אני" onBack={onBack} scores={stage === "setup" ? null : players.map((p) => ({ name: p, score: totals[p] || 0 }))}>
       <div className="flex flex-col items-center gap-2 pt-4 text-center">
         <Lead color={COLOR}>{name}</Lead>
         <BigNumber color={COLOR}>{right}</BigNumber>

@@ -13,6 +13,8 @@ import { useEndBeep, useBeepWhen } from "../../utils/soloHelpers";
 import { LEXICON } from "../../data/lexicon";
 import { HostImposter, HostBoggle } from "./NewGameViews";
 import { TEAM_NAMES, teamTotals } from "../../game/aliasLogic";
+import ScoreButton from "../common/ScoreButton";
+import { saveNight, loadBoard, clearBoard, shareScores, cheer } from "../../utils/extras";
 
 /* ============================================================================
    HOST — views
@@ -114,6 +116,30 @@ export function HostLobby({ room, dispatch, roomCode, onExit, kind = "tv" }) {
   );
 }
 
+function ImposterWordsButton({ room, dispatch }) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState((room.impWords || []).join("\n"));
+  const n = (room.impWords || []).length;
+  return (
+    <>
+      <Btn full variant="ghost" onClick={() => setOpen(true)}>✍️ מילים משלנו למתחזה{n ? ` (${n})` : ""}</Btn>
+      {open && (
+        <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 backdrop-blur-sm md:items-center" onClick={() => setOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="flex w-full max-w-md flex-col gap-3 rounded-t-3xl border p-5 md:rounded-3xl" style={{ background: COLORS.surface, borderColor: COLORS.border }}>
+            <div className="font-black" style={{ color: COLORS.text }}>מילים משלנו ל"המתחזה"</div>
+            <p className="text-xs" style={{ color: COLORS.muted }}>מילה בכל שורה: שמות של חברים, בדיחות פנימיות, מקומות משותפים. צריך לפחות 2. הן ייכנסו לסיבובים בקטגוריה "המילים שלנו".</p>
+            <textarea value={text} onChange={(e) => setText(e.target.value)} rows={8} className="w-full rounded-xl border bg-transparent p-3 text-sm outline-none" style={{ borderColor: COLORS.border, color: COLORS.text }} placeholder={"למשל:\nהטיול לאילת\nהחתול של דנה"} />
+            <div className="flex gap-2">
+              <Btn full variant="primary" onClick={() => { dispatch({ type: "SET_IMP_WORDS", words: text.split("\n") }); setOpen(false); }}>שמירה</Btn>
+              <Btn variant="ghost" onClick={() => setOpen(false)}>ביטול</Btn>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export function HostHub({ room, dispatch, onPodium, onLobby }) {
   const games = GAME_DEFS.filter((g) => room.enabledGames.includes(g.id));
   const anyScore = room.players.some((p) => p.score > 0 || p.correct > 0 || p.skips > 0 || p.diagnosed > 0);
@@ -146,6 +172,9 @@ export function HostHub({ room, dispatch, onPodium, onLobby }) {
           );
         })}
       </div>
+      {room.enabledGames.includes("imposter") && (
+        <div className="mt-2 shrink-0"><ImposterWordsButton room={room} dispatch={dispatch} /></div>
+      )}
       <div className="mt-3 shrink-0">
         <Btn full variant="gold" disabled={!anyScore} onClick={onPodium}><Trophy size={18} /> לוח התוצאות</Btn>
       </div>
@@ -490,6 +519,35 @@ export function HostShrink({ room, dispatch, onBack }) {
   );
 }
 
+export function BoardButton() {
+  const [open, setOpen] = useState(false);
+  const [tick, setTick] = useState(0);
+  const board = loadBoard();
+  const rows = Object.entries(board).map(([name, r]) => ({ name, ...r })).sort((a, b) => b.points - a.points);
+  return (
+    <>
+      <Btn full variant="ghost" onClick={() => setOpen(true)}>📊 כל הערבים</Btn>
+      {open && (
+        <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 backdrop-blur-sm md:items-center" onClick={() => setOpen(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="flex max-h-[85dvh] w-full max-w-md flex-col gap-2 overflow-y-auto rounded-t-3xl border p-5 md:rounded-3xl" style={{ background: COLORS.surface, borderColor: COLORS.border }} data-tick={tick}>
+            <div className="font-black" style={{ color: COLORS.text }}>טבלת כל הערבים (נשמרת במכשיר הזה)</div>
+            {rows.length === 0 && <p className="text-sm" style={{ color: COLORS.muted }}>עוד אין ערבים שמורים. הניקוד נשמר כשמגיעים ללוח התוצאות.</p>}
+            {rows.map((r, i) => (
+              <div key={r.name} className="flex items-center gap-3 rounded-2xl border px-3 py-2" style={{ borderColor: COLORS.border, background: COLORS.surfaceAlt }}>
+                <span className="w-5 text-center text-sm font-black" style={{ color: COLORS.muted }}>{i + 1}</span>
+                <span className="flex-1 truncate font-bold" style={{ color: COLORS.text }}>{r.name}</span>
+                <span className="text-[11px]" style={{ color: COLORS.muted }}>{r.nights} ערבים</span>
+                <span className="text-lg font-black" style={{ color: COLORS.amber }}>{r.points}</span>
+              </div>
+            ))}
+            {rows.length > 0 && <button onClick={() => { if (window.confirm("למחוק את כל הטבלה?")) { clearBoard(); setTick(tick + 1); setOpen(false); } }} className="pt-1 text-center text-xs font-bold" style={{ color: COLORS.coral }}>איפוס הטבלה</button>}
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
 export function HostPodium({ room, dispatch, onExit }) {
   return (
     <Podium
@@ -498,6 +556,10 @@ export function HostPodium({ room, dispatch, onExit }) {
       actions={
         <div className="space-y-2.5">
           <Btn full variant="primary" onClick={() => dispatch({ type: "PLAY_AGAIN" })}><RefreshCw size={18} /> סיבוב נוסף</Btn>
+          <div className="grid grid-cols-2 gap-2">
+            <Btn full variant="gold" onClick={() => shareScores(room.players)}>📤 שיתוף תמונה</Btn>
+            <BoardButton />
+          </div>
           <Btn full variant="ghost" onClick={onExit}><LogOut size={18} /> סגירת החדר</Btn>
         </div>
       }
@@ -541,10 +603,10 @@ function HostSetup({ kind, onContinue, onBack }) {
   );
 }
 
-export default function HostApp({ onExit, kind = "tv" }) {
-  const [setupDone, setSetupDone] = useState(false);
-  const [roomCode] = useState(() => generateRoomCode());
-  const [room, localDispatch] = useReducer(roomReducer, null, createInitialRoom);
+export default function HostApp({ onExit, kind = "tv", resume = null }) {
+  const [setupDone, setSetupDone] = useState(!!resume); // a phone taking over skips the setup steps
+  const [roomCode] = useState(() => resume?.roomCode || generateRoomCode());
+  const [room, localDispatch] = useReducer(roomReducer, null, () => (resume?.room ? { ...resume.room, paused: false } : createInitialRoom()));
   const channelRef = useRef(null);
   const roomRef = useRef(room);
   roomRef.current = room;
@@ -595,6 +657,11 @@ export default function HostApp({ onExit, kind = "tv" }) {
     return () => { el.style.fontSize = before; };
   }, []);
 
+  // The end of the evening: remember the points in the all-evenings scoreboard, and cheer.
+  useEffect(() => {
+    if (room.screen === "podium") { saveNight(roomCode, room.players); cheer(); }
+  }, [room.screen]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!setupDone) return <HostSetup kind={kind} onContinue={() => setSetupDone(true)} onBack={onExit} />;
 
   const joinUrl = `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(roomCode)}`;
@@ -605,6 +672,7 @@ export default function HostApp({ onExit, kind = "tv" }) {
       {["hub", "whoami", "alias", "lexicon", "shrink", "imposter", "boggle"].includes(room.screen) && (
         <PlayersPanel room={room} dispatch={localDispatch} joinUrl={joinUrl} roomCode={roomCode} gameKey={turnKey} onBack={room.screen === "hub" ? null : backToHub} onExit={onExit} />
       )}
+      {["hub", "whoami", "alias", "lexicon", "shrink", "imposter", "boggle"].includes(room.screen) && <ScoreButton rows={room.players.map((p) => ({ name: p.name, score: p.score || 0 }))} />}
       {room.screen === "lobby" && <HostLobby room={room} dispatch={localDispatch} roomCode={roomCode} onExit={onExit} kind={kind} />}
       {room.screen === "hub" && <HostHub room={room} dispatch={localDispatch} onPodium={() => localDispatch({ type: "GO_PODIUM" })} onLobby={() => localDispatch({ type: "BACK_TO_LOBBY" })} />}
       {room.screen === "whoami" && <HostWhoAmI room={room} dispatch={localDispatch} onBack={backToHub} />}

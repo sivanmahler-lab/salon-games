@@ -1,4 +1,4 @@
-import { pickImposterWord, IMPOSTER_CATEGORIES } from "../data/imposterWords";
+import { pickImposterWord, IMPOSTER_CATEGORIES, CUSTOM_CAT } from "../data/imposterWords";
 
 /* ---------------------------------------------------------------------------
    Two party games added later: "המתחזה" (imposter) and Hebrew Boggle.
@@ -10,9 +10,11 @@ const shuffleArr = (a) => { const r = [...a]; for (let i = r.length - 1; i > 0; 
 /* ---- Imposter ---- */
 export function newImposterRound(room, prev = null) {
   const ids = room.players.map((p) => p.id);
-  const { cat, word } = pickImposterWord(prev?.word);
+  const custom = room.impWords || [];
+  const { cat, word } = pickImposterWord(prev?.word, custom);
   const imposterId = ids[Math.floor(Math.random() * ids.length)];
-  const options = shuffleArr([word, ...shuffleArr(IMPOSTER_CATEGORIES.find((c) => c.cat === cat).words.filter((w) => w !== word)).slice(0, 7)]);
+  const pool = cat === CUSTOM_CAT ? custom : IMPOSTER_CATEGORIES.find((c) => c.cat === cat).words;
+  const options = shuffleArr([word, ...shuffleArr(pool.filter((w) => w !== word)).slice(0, 7)]);
   return {
     phase: "reveal", // reveal (phones show the role) -> talk -> vote -> guess (if caught) -> result
     cat, word, imposterId, options,

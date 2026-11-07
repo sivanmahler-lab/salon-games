@@ -92,7 +92,7 @@ export default function AliasSolo({ onBack }) {
 
   if (stage === "setup") {
     return (
-      <SoloScreen title="אליאס" onBack={onBack}>
+      <SoloScreen title="אליאס" onBack={onBack} scores={stage === "setup" ? null : teams.map((t) => ({ name: t.name, score: t.score }))}>
         <Section title="כמה קבוצות">
           <Stepper value={teams.length} onMinus={() => setTeamCount(-1)} onPlus={() => setTeamCount(1)} />
           <div className="mt-3 space-y-2">
@@ -124,7 +124,7 @@ export default function AliasSolo({ onBack }) {
 
   if (stage === "ready") {
     return (
-      <SoloScreen title="אליאס" onBack={onBack}>
+      <SoloScreen title="אליאס" onBack={onBack} scores={stage === "setup" ? null : teams.map((t) => ({ name: t.name, score: t.score }))}>
         <ScoreStrip items={scores} now={turn} color={COLOR} />
         <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
           <Lead color={COLOR}>התור של</Lead>
@@ -139,7 +139,7 @@ export default function AliasSolo({ onBack }) {
   if (stage === "play") {
     const guessed = log.filter((x) => x.ok).length;
     return (
-      <SoloScreen title="אליאס" onBack={onBack}>
+      <SoloScreen title="אליאס" onBack={onBack} scores={stage === "setup" ? null : teams.map((t) => ({ name: t.name, score: t.score }))}>
         <div className="flex items-baseline justify-between">
           <Clock seconds={timer.left} />
           <div className="text-sm" style={{ color: COLORS.muted }}>נוחשו <b className="text-lg tabular-nums" style={{ color: COLORS.text }}>{guessed}</b></div>
@@ -158,7 +158,7 @@ export default function AliasSolo({ onBack }) {
   if (stage === "review") {
     const d = aliasDelta(log, penalty);
     return (
-      <SoloScreen title="אליאס" onBack={onBack}>
+      <SoloScreen title="אליאס" onBack={onBack} scores={stage === "setup" ? null : teams.map((t) => ({ name: t.name, score: t.score }))}>
         <div className="flex flex-col items-center gap-2 pt-4 text-center">
           <Lead color={COLOR}>{teams[turn].name}</Lead>
           <BigNumber color={COLOR}>{d > 0 ? "+" : ""}{d}</BigNumber>
@@ -187,7 +187,7 @@ export default function AliasSolo({ onBack }) {
   // end
   const rank = teams.slice().sort((a, b) => b.score - a.score);
   return (
-    <SoloScreen title="אליאס" onBack={onBack}>
+    <SoloScreen title="אליאס" onBack={onBack} scores={stage === "setup" ? null : teams.map((t) => ({ name: t.name, score: t.score }))}>
       <div className="flex flex-col items-center gap-2 pt-4 text-center">
         <Lead color={COLOR}>ניצחה</Lead>
         <h2 className="text-4xl font-black" style={{ color: COLORS.text, fontFamily: "Rubik, sans-serif" }}>{rank[0].name}</h2>

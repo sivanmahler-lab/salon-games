@@ -58,6 +58,8 @@ export function useWakeLock() {
 }
 
 export function beep() {
+  if (typeof window !== "undefined" && window.__salonMute) return;
+  try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) { /* no vibration */ }
   try {
     const Ctx = window.AudioContext || window.webkitAudioContext;
     const ctx = new Ctx();

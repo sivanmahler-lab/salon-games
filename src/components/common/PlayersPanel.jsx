@@ -19,7 +19,7 @@ export default function PlayersPanel({ room, dispatch, joinUrl, roomCode, gameKe
       <button
         onClick={() => setOpen(true)}
         className="fixed bottom-3 right-3 z-[65] flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold"
-        style={{ borderColor: COLORS.border, background: "rgba(9,13,22,0.85)", color: COLORS.text }}
+        style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.text }}
       >
         <Users size={14} /> שחקנים / QR
       </button>

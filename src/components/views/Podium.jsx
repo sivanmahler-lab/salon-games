@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Crown, Medal } from "lucide-react";
 import { COLORS } from "../../constants/theme";
 import { Logo, GlassCard, Avatar, Confetti } from "../common/UIComponents";
+import { cheer } from "../../utils/extras";
 
 export function computeBadges(players) {
   const badges = {};
@@ -54,13 +55,15 @@ export function Podium({ players, actions, tv = false }) {
   const [first, second, third] = [top3[0], top3[1], top3[2]];
   const badges = useMemo(() => computeBadges(players), [players]);
   const [burst] = useState(1);
+  const total = players.reduce((a, p) => a + (p.score || 0), 0);
+  useEffect(() => { if (!tv) cheer(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className={tv ? "relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 landscape:max-w-5xl" : "relative z-10 mx-auto flex min-h-screen max-w-md flex-col px-5 pb-12 pt-8 md:max-w-xl"}>
       <Confetti burstKey={burst} />
       <div className={`flex shrink-0 justify-center ${tv ? "mb-2" : "mb-6"}`}><Logo /></div>
       <div className="mb-2 text-center text-xl font-black" style={{ color: COLORS.text }}>לוח התוצאות</div>
-      <p className={`text-center text-sm ${tv ? "mb-3" : "mb-8"}`} style={{ color: COLORS.muted }}>ערב בלתי נשכח, רשמית</p>
+      <p className={`text-center text-sm ${tv ? "mb-3" : "mb-8"}`} style={{ color: COLORS.muted }}>ערב בלתי נשכח, רשמית · {players.length} שחקנים · {total} נקודות בסך הכול</p>
 
       <div className={`flex shrink-0 items-end justify-center gap-3 ${tv ? "mb-3" : "mb-10"}`}>
         {second && <PodiumStand player={second} place={2} index={0} />}

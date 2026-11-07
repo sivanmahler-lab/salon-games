@@ -9,6 +9,8 @@ import RemoteControl from "./RemoteControl";
 import { PlayerImposter, PlayerBoggle } from "./NewGameViews";
 import { LEXICON } from "../../data/lexicon";
 import { useEndBeep, useBeepWhen } from "../../utils/soloHelpers";
+import ScoreButton from "../common/ScoreButton";
+import { shareScores, cheer, buzz } from "../../utils/extras";
 
 /* ============================================================================
    PLAYER — views
@@ -351,17 +353,22 @@ export function PlayerShrink({ room, dispatch, myId }) {
   );
 }
 
-export default function PlayerApp({ roomCode, name, traits, onExit }) {
+export default function PlayerApp({ roomCode, name, traits, onExit, onTakeover }) {
   const [myId] = useState(() => generateId());
   const [room, setRoom] = useState(null);
   const [connecting, setConnecting] = useState(true);
   const [remote, setRemote] = useState(false);
+  const [offline, setOffline] = useState(typeof navigator !== "undefined" && navigator.onLine === false);
+  const [silentFor, setSilentFor] = useState(0); // seconds since the host last said anything
   const channelRef = useRef(null);
+  const roomRef = useRef(null);
+  roomRef.current = room;
 
   useEffect(() => {
     let alive = true;
     let unsub = () => {};
     let lastSeen = Date.now();
+    let lastState = Date.now();
 
     // (Re)connect to the room and ask the host for the current state.
     const connect = () => {
@@ -372,6 +379,7 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
       unsub = ch.subscribe((msg) => {
         if (msg.type === "STATE") {
           lastSeen = Date.now();
+          lastState = Date.now();
           setRoom(msg.room);
           setConnecting(false);
         }
@@ -384,6 +392,11 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
     // A phone that went to the background (another tab, locked screen) may have missed updates or lost its
     // connection. When it comes back, or when the host has been silent too long, reconnect and catch up.
     const wake = () => { if (alive && !document.hidden) connect(); };
+    const goOff = () => setOffline(true);
+    const goOn = () => setOffline(false);
+    window.addEventListener("offline", goOff);
+    window.addEventListener("online", goOn);
+    const silence = setInterval(() => setSilentFor(Math.round((Date.now() - lastState) / 1000)), 2000);
     const watchdog = setInterval(() => { if (alive && !document.hidden && Date.now() - lastSeen > 12000) { lastSeen = Date.now(); connect(); } }, 4000);
     document.addEventListener("visibilitychange", wake);
     window.addEventListener("pageshow", wake);
@@ -395,6 +408,9 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
       unsub();
       channelRef.current?.close();
       clearInterval(watchdog);
+      clearInterval(silence);
+      window.removeEventListener("offline", goOff);
+      window.removeEventListener("online", goOn);
       clearTimeout(timeout);
       document.removeEventListener("visibilitychange", wake);
       window.removeEventListener("pageshow", wake);
@@ -439,8 +455,24 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
     );
   }
 
+  const inGame = ["hub", "whoami", "alias", "lexicon", "shrink", "imposter", "boggle"].includes(room.screen);
+  const hostGone = !offline && silentFor >= 25;
   return (
     <>
+      {(offline || silentFor >= 12) && (
+        <div role="alert" className="fixed inset-x-0 top-0 z-[88] flex flex-col items-center gap-1 px-3 py-2 text-center text-xs font-bold" style={{ background: COLORS.coral, color: "#fff" }}>
+          <div className="flex items-center gap-1.5"><WifiOff size={14} /> {offline ? "אין חיבור לאינטרנט בטלפון הזה. מנסים להתחבר מחדש..." : "המנחה לא עונה כרגע. מנסים להתחבר מחדש..."}</div>
+          {hostGone && onTakeover && (
+            <button
+              onClick={() => { if (window.confirm("המנחה נעלם. לקחת את הניהול על הטלפון הזה? הערב ימשיך מהמקום שבו נעצר.")) onTakeover({ roomCode, room: roomRef.current }); }}
+              className="rounded-full px-3 py-1 text-[11px] font-black" style={{ background: "#fff", color: COLORS.coral }}
+            >
+              לקחת את הניהול על הטלפון שלי
+            </button>
+          )}
+        </div>
+      )}
+      {inGame && <ScoreButton rows={room.players.map((p) => ({ name: p.name, score: p.score || 0 }))} />}
       {remote ? (
         <RemoteControl room={room} dispatch={dispatch} roomCode={roomCode} />
       ) : (
@@ -453,14 +485,14 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
       <button
         onClick={() => setRemote(!remote)}
         className="fixed bottom-3 left-3 z-[70] rounded-full border px-3 py-1.5 text-[11px] font-bold"
-        style={{ borderColor: remote ? COLORS.amber : COLORS.border, background: remote ? COLORS.amber : "rgba(9,13,22,0.85)", color: remote ? "#0b0f1a" : COLORS.muted }}
+        style={{ borderColor: remote ? COLORS.amber : COLORS.border, background: remote ? COLORS.amber : COLORS.surface, color: remote ? "#0b0f1a" : COLORS.muted }}
       >
         {remote ? "חזרה למסך שלי" : "🎛 שלט מנחה"}
       </button>
       <button
         onClick={() => { if (window.confirm("לצאת מהמשחק?")) leave(); }}
         className="fixed left-2 top-2 z-[70] rounded-full border px-2.5 py-1 text-[10px] font-bold"
-        style={{ borderColor: COLORS.border, background: "rgba(9,13,22,0.85)", color: COLORS.coral }}
+        style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.coral }}
       >
         יציאה מהמשחק
       </button>
@@ -474,7 +506,7 @@ export function PausedOverlay() {
     <div
       role="alert"
       className="fixed inset-0 z-[60] flex flex-col items-center justify-center gap-4 px-6 text-center"
-      style={{ background: "rgba(9,13,22,0.97)" }}
+      style={{ background: COLORS.bg }}
     >
       <Pause size={56} color={COLORS.amber} />
       <div className="text-2xl font-black" style={{ color: COLORS.amber }}>המנחה לחץ PAUSE</div>
@@ -492,6 +524,6 @@ function PlayerScreen({ room, dispatch, myId, name }) {
   if (room.screen === "boggle") return <PlayerBoggle room={room} dispatch={dispatch} myId={myId} />;
   if (room.screen === "shrink") return <PlayerShrink room={room} dispatch={dispatch} myId={myId} />;
   if (room.screen === "alias") return <PlayerAlias room={room} dispatch={dispatch} myId={myId} />;
-  if (room.screen === "podium") return <Podium players={room.players} actions={<p className="text-center text-xs" style={{ color: COLORS.muted }}>ממתינים שהמנחה יחליט מה הלאה...</p>} />;
+  if (room.screen === "podium") return <Podium players={room.players} actions={<div className="space-y-3"><Btn full variant="gold" onClick={() => shareScores(room.players)}>📤 שיתוף תמונה של הניקוד</Btn><p className="text-center text-xs" style={{ color: COLORS.muted }}>ממתינים שהמנחה יחליט מה הלאה...</p></div>} />;
   return null;
 }
