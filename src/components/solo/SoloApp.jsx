@@ -2,8 +2,7 @@ import React, { useState } from "react";
 import { ChevronLeft, Home, HelpCircle } from "lucide-react";
 import { Zap, Brain, Stethoscope } from "lucide-react";
 import { COLORS } from "../../constants/theme";
-import { ALIAS_WORDS, WHO } from "../../data/salonContent";
-import { GlassCard, Logo } from "../common/UIComponents";
+import { Logo } from "../common/UIComponents";
 import HowToPlay from "../common/HowToPlay";
 import AliasSolo from "./AliasSolo";
 import WhoSolo from "./WhoSolo";
@@ -15,7 +14,6 @@ const GAMES = [
   { id: "psy", title: "הפסיכולוג", desc: "אחד יוצא מהחדר, כולם מסכימים על חוק סודי, והוא צריך לגלות אותו מהתשובות.", meta: "20 חוקים · שאלות לדוגמה", icon: Stethoscope, color: COLORS.emerald },
 ];
 
-const WHO_COUNT = Object.values(WHO).reduce((sum, list) => sum + list.length, 0);
 
 /* The one-phone games: one phone in the middle of the room, and everyone around it. */
 export default function SoloApp({ onExit }) {
@@ -67,9 +65,6 @@ export default function SoloApp({ onExit }) {
       </div>
 
       {help && <HowToPlay onClose={() => setHelp(false)} />}
-      <GlassCard className="mt-6 text-center text-xs" >
-        <span style={{ color: COLORS.muted }}>{ALIAS_WORDS.length} מילים לאליאס · {WHO_COUNT} פריטים ל"מי אני"</span>
-      </GlassCard>
     </div>
   );
 }
