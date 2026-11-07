@@ -310,9 +310,11 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
   const submitted = room.players.filter((p) => L.defs[p.id]);
   const voted = room.players.filter((p) => L.votes[p.id]);
   useBeepWhen(room.players.length > 0 && voted.length === room.players.length);
+  const compact = L.phase === "vote" || L.phase === "result";
+  const cardText = { fontSize: "clamp(0.7rem, min(3.6vw, 2.2vh), 1.05rem)", lineHeight: 1.25 };
 
   return (
-    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 md:max-w-xl landscape:max-w-5xl">
+    <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-3 pt-3 md:max-w-xl landscape:max-w-5xl">
       <TopBar
         title="לקסיקון לועזי-עברי (מסך מנחה)"
         onBack={onBack}
@@ -325,9 +327,9 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
         ]}
       />
 
-      <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-center">
-        <div className="text-xs font-bold" style={{ color: COLORS.sky }}>המילה הלועזית</div>
-        <div className="font-black" style={{ color: COLORS.text, fontFamily: "Rubik, sans-serif", fontSize: "clamp(2rem, min(10vw, 12vh), 5rem)" }}>{entry.w}</div>
+      <div className={`flex min-h-0 flex-1 flex-col items-center text-center ${compact ? "justify-start gap-1.5" : "justify-center gap-3"}`}>
+        {!compact && <div className="text-xs font-bold" style={{ color: COLORS.sky }}>המילה הלועזית</div>}
+        <div className="font-black" style={{ color: COLORS.text, fontFamily: "Rubik, sans-serif", fontSize: compact ? "clamp(1.4rem, min(7vw, 5vh), 2.4rem)" : "clamp(2rem, min(10vw, 12vh), 5rem)" }}>{entry.w}</div>
 
         {L.notice && L.phase === "check" && (
           <div className="rounded-xl border px-3 py-1.5 text-sm font-bold" style={{ borderColor: COLORS.amber, color: COLORS.amber }}>
@@ -358,19 +360,19 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
 
         {L.phase === "vote" && (
           <>
-            <p className="text-sm" style={{ color: COLORS.muted }}>המנחה מקריא את ההגדרות בקול, ומצביעים בטלפון על המספר ({voted.length} מתוך {room.players.length})</p>
-            <div className="flex flex-wrap justify-center gap-2">
+            <p className="text-xs" style={{ color: COLORS.muted }}>המנחה מקריא את ההגדרות בקול, ומצביעים בטלפון על המספר ({voted.length} מתוך {room.players.length})</p>
+            <div className="flex flex-wrap justify-center gap-1">
               {room.players.map((p, i) => (
-                <div key={p.id} className="flex items-center gap-2 rounded-xl border px-2.5 py-1 text-xs font-bold" style={{ borderColor: L.votes[p.id] ? COLORS.emerald : COLORS.border, color: L.votes[p.id] ? COLORS.emerald : COLORS.muted }}>
-                  <Avatar index={i} name={p.name} /> {p.name} {L.votes[p.id] ? "✓" : ""}
+                <div key={p.id} className="flex items-center gap-1 rounded-lg border px-1.5 py-0.5 text-[11px] font-bold" style={{ borderColor: L.votes[p.id] ? COLORS.emerald : COLORS.border, color: L.votes[p.id] ? COLORS.emerald : COLORS.muted }}>
+                  {p.name} {L.votes[p.id] ? "✓" : ""}
                 </div>
               ))}
             </div>
-            <div className="grid min-h-0 w-full gap-3 overflow-y-auto landscape:grid-flow-col landscape:[grid-template-rows:repeat(var(--rows),minmax(0,auto))]" style={{ "--rows": Math.ceil(L.options.length / 2) }}>
+            <div className="grid min-h-0 w-full flex-1 gap-1.5 [grid-auto-rows:minmax(0,1fr)] landscape:grid-flow-col landscape:[grid-template-rows:repeat(var(--rows),minmax(0,1fr))]" style={{ "--rows": Math.ceil(L.options.length / 2) }}>
               {L.options.map((o, i) => (
-                <div key={o.id} className="flex items-center gap-3 rounded-2xl border p-3 text-right font-bold" style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.text }}>
-                  <span className="flex h-[2.2em] w-[2.2em] shrink-0 items-center justify-center rounded-full text-lg font-black" style={{ background: `${COLORS.sky}33`, color: COLORS.sky }}>{i + 1}</span>
-                  <span className="flex-1 text-base">{o.text}</span>
+                <div key={o.id} className="flex min-h-0 items-center gap-2 overflow-hidden rounded-xl border px-2 py-1 text-right font-bold" style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.text }}>
+                  <span className="flex h-[1.8em] w-[1.8em] shrink-0 items-center justify-center rounded-full text-sm font-black" style={{ background: `${COLORS.sky}33`, color: COLORS.sky }}>{i + 1}</span>
+                  <span className="flex-1" style={cardText}>{o.text}</span>
                 </div>
               ))}
             </div>
@@ -380,14 +382,14 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
 
         {L.phase === "result" && (
           <>
-            <div className="grid min-h-0 w-full gap-2 overflow-y-auto landscape:grid-flow-col landscape:[grid-template-rows:repeat(var(--rows),minmax(0,auto))]" style={{ "--rows": Math.ceil(L.options.length / 2) }}>
+            <div className="grid min-h-0 w-full flex-1 gap-1.5 [grid-auto-rows:minmax(0,1fr)] landscape:grid-flow-col landscape:[grid-template-rows:repeat(var(--rows),minmax(0,1fr))]" style={{ "--rows": Math.ceil(L.options.length / 2) }}>
               {L.options.map((o) => {
                 const who = room.players.filter((p) => L.votes[p.id] === o.id).map((p) => p.name);
                 const real = o.owner === null;
                 return (
-                  <div key={o.id} className="rounded-2xl border p-3 text-right text-sm" style={{ borderColor: real ? COLORS.emerald : COLORS.border, background: real ? `${COLORS.emerald}1a` : COLORS.surface }}>
+                  <div key={o.id} className="flex min-h-0 flex-col justify-center overflow-hidden rounded-xl border px-2 py-1 text-right" style={{ ...cardText, borderColor: real ? COLORS.emerald : COLORS.border, background: real ? `${COLORS.emerald}1a` : COLORS.surface }}>
                     <div className="font-bold" style={{ color: COLORS.text }}>{o.text}</div>
-                    <div className="mt-1 text-xs" style={{ color: real ? COLORS.emerald : COLORS.muted }}>
+                    <div className="mt-0.5 text-[0.85em]" style={{ color: real ? COLORS.emerald : COLORS.muted }}>
                       {real ? "✓ ההגדרה האמיתית" : `הומצאה על ידי ${nameOf(o.owner)}`}{who.length ? ` · הצביעו: ${who.join(", ")}` : ""}
                     </div>
                   </div>
