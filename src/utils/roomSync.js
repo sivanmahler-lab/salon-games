@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { GAME_DEFS } from "../constants/theme";
 import { shuffle, buildCharacters, buildShrinkRule, buildAliasDeck } from "../data/datasets";
 import { LEXICON } from "../data/lexicon";
+import { newImposterRound, imposterToGuessOrResult, imposterFinish, newBoggleRound, wordOnBoard, normHeb, boggleScores } from "../game/newGames";
 
 /* ----------------------------------------------------------------------------
    ROOM SYNC ADAPTER
@@ -106,6 +107,9 @@ export function createInitialRoom() {
     whoami: null,
     shrink: null,
     alias: null,
+    lexicon: null,
+    imposter: null,
+    boggle: null,
   };
 }
 
@@ -172,9 +176,9 @@ function removePlayer(room, id) {
   if (idx < 0) return { ...room, left };
   let next = { ...room, left, players: room.players.filter((p) => p.id !== id) };
   const n = next.players.length;
-  const inGame = ["whoami", "alias", "lexicon", "shrink"].includes(room.screen);
+  const inGame = ["whoami", "alias", "lexicon", "shrink", "imposter", "boggle"].includes(room.screen);
   if (inGame && n < 2) {
-    return { ...next, screen: "hub", paused: false, whoami: null, shrink: null, alias: null, lexicon: null };
+    return { ...next, screen: "hub", paused: false, whoami: null, shrink: null, alias: null, lexicon: null, imposter: null, boggle: null };
   }
   for (const key of ["whoami", "alias"]) {
     const g = next[key];
@@ -190,6 +194,22 @@ function removePlayer(room, id) {
     if (L2.phase === "check" && next.players.every((p) => L2.seen[p.id])) next = { ...next, lexicon: { ...L2, phase: "write", notice: null } };
     else if (L2.phase === "write" && Object.keys(L2.defs).length && next.players.every((p) => L2.defs[p.id])) next = lexiconToVote(next);
     else if (L2.phase === "vote" && next.players.every((p) => L2.votes[p.id] || !L2.options.some((o) => o.owner !== p.id))) next = lexiconReveal(next);
+  }
+  const I = next.imposter;
+  if (I && room.screen === "imposter" && I.phase !== "result") {
+    if (n < 3 || id === I.imposterId) {
+      next = n < 3 ? { ...next, screen: "hub", imposter: null } : { ...next, imposter: { ...newImposterRound(next, I), round: I.round } }; // the imposter left: a fresh round
+    } else {
+      const drop = (o) => Object.fromEntries(Object.entries(o || {}).filter(([k, v]) => k !== id && v !== id));
+      next = { ...next, imposter: { ...I, seen: drop(I.seen), votes: drop(I.votes), order: I.order.filter((x) => x !== id) } };
+      const I2 = next.imposter;
+      if (I2.phase === "vote" && next.players.every((p) => I2.votes[p.id])) next = imposterToGuessOrResult(next);
+    }
+  }
+  const B = next.boggle;
+  if (B && room.screen === "boggle") {
+    const words = Object.fromEntries(Object.entries(B.words).filter(([k]) => k !== id));
+    next = { ...next, boggle: { ...B, words } };
   }
   const S = next.shrink;
   if (S && room.screen === "shrink" && S.psychId === id) next = { ...next, shrink: { phase: "select", psychId: next.players[0]?.id || null, rule: "", clues: 0, found: false, totalScore: 0 } };
@@ -227,7 +247,7 @@ export function roomReducer(room, action) {
       return { ...room, paused: !!action.value };
     case "PLAY_AGAIN": {
       const players = room.players.map((p) => ({ ...p, score: 0, correct: 0, skips: 0, diagnosed: 0 }));
-      return { ...room, players, screen: "hub", paused: false, whoami: null, shrink: null, alias: null, lexicon: null };
+      return { ...room, players, screen: "hub", paused: false, whoami: null, shrink: null, alias: null, lexicon: null, imposter: null, boggle: null };
     }
 
     case "START_GAME": {
@@ -246,7 +266,94 @@ export function roomReducer(room, action) {
       if (action.game === "lexicon") {
         return { ...room, screen: "lexicon", lexicon: lexiconRound(shuffle(LEXICON.map((_, i) => i)), 0) }; // every word, no difficulty choice
       }
+      if (action.game === "imposter") {
+        return room.players.length >= 3 ? { ...room, screen: "imposter", imposter: newImposterRound(room) } : room;
+      }
+      if (action.game === "boggle") {
+        return { ...room, screen: "boggle", boggle: newBoggleRound() };
+      }
       return room;
+    }
+
+    /* ---- Imposter ---- */
+    case "IMP_SEEN": {
+      const I = room.imposter;
+      if (!I || I.phase !== "reveal" || !room.players.some((p) => p.id === action.id)) return room;
+      const seen = { ...I.seen, [action.id]: true };
+      return { ...room, imposter: { ...I, seen, ...(room.players.every((p) => seen[p.id]) ? { phase: "talk" } : {}) } };
+    }
+    case "IMP_TO_TALK": {
+      const I = room.imposter;
+      return I && I.phase === "reveal" ? { ...room, imposter: { ...I, phase: "talk" } } : room;
+    }
+    case "IMP_TO_VOTE": {
+      const I = room.imposter;
+      return I && I.phase === "talk" ? { ...room, imposter: { ...I, phase: "vote", votes: {} } } : room;
+    }
+    case "IMP_VOTE": {
+      const I = room.imposter;
+      if (!I || I.phase !== "vote" || action.id === action.target) return room;
+      if (!room.players.some((p) => p.id === action.id) || !room.players.some((p) => p.id === action.target)) return room;
+      const votes = { ...I.votes, [action.id]: action.target };
+      const next = { ...room, imposter: { ...I, votes } };
+      return room.players.every((p) => votes[p.id]) ? imposterToGuessOrResult(next) : next;
+    }
+    case "IMP_REVEAL": {
+      const I = room.imposter;
+      return I && I.phase === "vote" ? imposterToGuessOrResult(room) : room;
+    }
+    case "IMP_GUESS": {
+      const I = room.imposter;
+      if (!I || I.phase !== "guess" || action.id !== I.imposterId) return room;
+      return imposterFinish(room, action.word);
+    }
+    case "IMP_SKIP_GUESS": {
+      const I = room.imposter;
+      return I && I.phase === "guess" ? imposterFinish(room, "") : room;
+    }
+    case "IMP_NEXT": {
+      const I = room.imposter;
+      return I && I.phase === "result" && room.players.length >= 3 ? { ...room, imposter: newImposterRound(room, I) } : room;
+    }
+
+    /* ---- Boggle ---- */
+    case "BOG_BEGIN": {
+      const B = room.boggle;
+      return B && B.phase === "ready" ? { ...room, boggle: { ...B, phase: "play", timeLeft: 180 } } : room;
+    }
+    case "BOG_TICK": {
+      const B = room.boggle;
+      if (!B || B.phase !== "play" || room.paused) return room;
+      const timeLeft = B.timeLeft - 1;
+      return { ...room, boggle: timeLeft <= 0 ? { ...B, timeLeft: 0, phase: "review" } : { ...B, timeLeft } };
+    }
+    case "BOG_END": {
+      const B = room.boggle;
+      return B && B.phase === "play" ? { ...room, boggle: { ...B, timeLeft: 0, phase: "review" } } : room;
+    }
+    case "BOG_WORDS": {
+      // the phone sends its whole list of words; only words that really sit on the board are kept
+      const B = room.boggle;
+      if (!B || B.phase !== "play" || !room.players.some((p) => p.id === action.id)) return room;
+      const list = [...new Set((action.words || []).map(normHeb))].filter((w) => wordOnBoard(B.board, w)).slice(0, 200);
+      return { ...room, boggle: { ...B, words: { ...B.words, [action.id]: list } } };
+    }
+    case "BOG_TOGGLE": {
+      const B = room.boggle;
+      if (!B || B.phase !== "review") return room;
+      const removed = B.removed.includes(action.word) ? B.removed.filter((w) => w !== action.word) : [...B.removed, action.word];
+      return { ...room, boggle: { ...B, removed } };
+    }
+    case "BOG_FINISH": {
+      const B = room.boggle;
+      if (!B || B.phase !== "review") return room;
+      const gains = boggleScores(B);
+      const players = room.players.map((p) => ({ ...p, score: p.score + (gains[p.id] || 0) }));
+      return { ...room, players, boggle: { ...B, phase: "result", gains } };
+    }
+    case "BOG_NEXT": {
+      const B = room.boggle;
+      return B && B.phase === "result" ? { ...room, boggle: newBoggleRound(B) } : room;
     }
 
     case "LEX_KNOW": {

@@ -6,6 +6,7 @@ import { createRoomChannel, generateId, normalizeRoomCode } from "../../utils/ro
 import { Btn, GlassCard, Avatar, Logo, PartyCard, WinBanner } from "../common/UIComponents";
 import { Podium } from "./Podium";
 import RemoteControl from "./RemoteControl";
+import { PlayerImposter, PlayerBoggle } from "./NewGameViews";
 import { LEXICON } from "../../data/lexicon";
 import { useEndBeep, useBeepWhen } from "../../utils/soloHelpers";
 
@@ -487,6 +488,8 @@ function PlayerScreen({ room, dispatch, myId, name }) {
   if (room.screen === "hub") return <PlayerWaiting room={room} myName={name} label="המנחה בוחר/ת משחק..." />;
   if (room.screen === "whoami") return <PlayerWhoAmI room={room} dispatch={dispatch} myId={myId} />;
   if (room.screen === "lexicon") return <PlayerLexicon room={room} dispatch={dispatch} myId={myId} />;
+  if (room.screen === "imposter") return <PlayerImposter room={room} dispatch={dispatch} myId={myId} />;
+  if (room.screen === "boggle") return <PlayerBoggle room={room} dispatch={dispatch} myId={myId} />;
   if (room.screen === "shrink") return <PlayerShrink room={room} dispatch={dispatch} myId={myId} />;
   if (room.screen === "alias") return <PlayerAlias room={room} dispatch={dispatch} myId={myId} />;
   if (room.screen === "podium") return <Podium players={room.players} actions={<p className="text-center text-xs" style={{ color: COLORS.muted }}>ממתינים שהמנחה יחליט מה הלאה...</p>} />;

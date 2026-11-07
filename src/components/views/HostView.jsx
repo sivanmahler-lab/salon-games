@@ -11,6 +11,7 @@ import PlayersPanel from "../common/PlayersPanel";
 import { notifyJoin } from "../../utils/notify";
 import { useEndBeep, useBeepWhen } from "../../utils/soloHelpers";
 import { LEXICON } from "../../data/lexicon";
+import { HostImposter, HostBoggle } from "./NewGameViews";
 import { TEAM_NAMES, teamTotals } from "../../game/aliasLogic";
 
 /* ============================================================================
@@ -119,11 +120,11 @@ export function HostHub({ room, dispatch, onPodium, onLobby }) {
   return (
     <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 landscape:max-w-5xl">
       <div className="mb-3 flex shrink-0 justify-center"><Logo /></div>
-      <GlassCard className="mb-3 shrink-0 text-center text-xs font-bold" style={{ color: COLORS.muted }}>
+      <GlassCard className="mb-3 shrink-0 text-center text-xs font-bold [@media(max-height:600px)]:hidden" style={{ color: COLORS.muted }}>
         {room.players.length} שחקנים מחוברים — המסך הזה הוא מסך המנחה, בלי סודות עליו 🙈
       </GlassCard>
       <div className="mb-2 shrink-0 text-sm font-bold" style={{ color: COLORS.muted }}>בחרו משחק</div>
-      <div className={`grid min-h-0 flex-1 grid-cols-1 content-start gap-3 overflow-y-auto landscape:content-stretch landscape:overflow-visible ${games.length >= 4 ? "landscape:grid-cols-4" : "landscape:grid-cols-3"}`}>
+      <div className={`grid min-h-0 flex-1 grid-cols-1 content-start gap-3 overflow-y-auto landscape:content-stretch landscape:overflow-y-auto landscape:[grid-auto-rows:minmax(6rem,1fr)] ${games.length >= 7 ? "landscape:grid-cols-4" : games.length >= 4 ? "landscape:grid-cols-3" : "landscape:grid-cols-3"}`}>
         {games.map((g) => {
           const Icon = g.icon;
           return (
@@ -578,9 +579,9 @@ export default function HostApp({ onExit, kind = "tv" }) {
   }, []);
 
   useEffect(() => {
-    const activeKey = ["whoami", "alias"].find((k) => room.screen === k && room[k]?.phase === "playing");
+    const activeKey = ["whoami", "alias"].find((k) => room.screen === k && room[k]?.phase === "playing") || (room.screen === "boggle" && room.boggle?.phase === "play" ? "boggle" : null);
     if (!activeKey || room.paused) return;
-    const t = setTimeout(() => localDispatch({ type: "TICK", game: activeKey }), 1000);
+    const t = setTimeout(() => localDispatch(activeKey === "boggle" ? { type: "BOG_TICK" } : { type: "TICK", game: activeKey }), 1000);
     return () => clearTimeout(t);
   }, [room]);
 
@@ -601,12 +602,14 @@ export default function HostApp({ onExit, kind = "tv" }) {
 
   return (
     <>
-      {["hub", "whoami", "alias", "lexicon", "shrink"].includes(room.screen) && (
+      {["hub", "whoami", "alias", "lexicon", "shrink", "imposter", "boggle"].includes(room.screen) && (
         <PlayersPanel room={room} dispatch={localDispatch} joinUrl={joinUrl} roomCode={roomCode} gameKey={turnKey} onBack={room.screen === "hub" ? null : backToHub} onExit={onExit} />
       )}
       {room.screen === "lobby" && <HostLobby room={room} dispatch={localDispatch} roomCode={roomCode} onExit={onExit} kind={kind} />}
       {room.screen === "hub" && <HostHub room={room} dispatch={localDispatch} onPodium={() => localDispatch({ type: "GO_PODIUM" })} onLobby={() => localDispatch({ type: "BACK_TO_LOBBY" })} />}
       {room.screen === "whoami" && <HostWhoAmI room={room} dispatch={localDispatch} onBack={backToHub} />}
+      {room.screen === "imposter" && <HostImposter room={room} dispatch={localDispatch} onBack={backToHub} />}
+      {room.screen === "boggle" && <HostBoggle room={room} dispatch={localDispatch} onBack={backToHub} />}
       {room.screen === "lexicon" && <HostLexicon room={room} dispatch={localDispatch} onBack={backToHub} />}
       {room.screen === "shrink" && <HostShrink room={room} dispatch={localDispatch} onBack={backToHub} />}
       {room.screen === "alias" && <HostAlias room={room} dispatch={localDispatch} onBack={backToHub} />}
