@@ -237,8 +237,7 @@ function BoardGrid({ board, size = "min(60vw, 38vh)", onTap, path = [], dim }) {
 export function HostBoggle({ room, dispatch, onBack }) {
   const B = room.boggle;
   const idx = boggleIndex(B);
-  const allWords = Object.keys(idx).sort((a, b) => [...b].length - [...a].length || a.localeCompare(b, "he"));
-  const gains = boggleScores(B);
+    const gains = boggleScores(B);
   return (
     <div className={hostWrap}>
       <TopBar
@@ -275,22 +274,24 @@ export function HostBoggle({ room, dispatch, onBack }) {
         {B.phase === "review" && (
           <>
             <div className="shrink-0 text-lg font-black" style={{ color: COLORS.text }}>עוברים על המילים</div>
-            <p className="shrink-0 text-xs" style={{ color: COLORS.muted }}>מילה מחוקה ביחד = נמצאה אצל כמה שחקנים. מילה מפוקפקת? לחצו עליה כדי למחוק אותה (ושוב כדי להחזיר).</p>
-            <div className="flex min-h-0 w-full flex-1 flex-wrap content-start justify-center gap-1.5 overflow-y-auto">
-              {allWords.map((w) => {
-                const shared = idx[w].length > 1;
-                const removed = B.removed.includes(w);
-                const dead = shared || removed;
-                return (
-                  <button key={w} disabled={shared} onClick={() => dispatch({ type: "BOG_TOGGLE", word: w })} className="rounded-lg border px-2 py-1 text-sm font-bold" style={{ borderColor: removed ? COLORS.coral : COLORS.border, color: dead ? COLORS.muted : COLORS.text, textDecoration: dead ? "line-through" : "none", background: COLORS.surface }}>
-                    {w} <span className="text-[10px]" style={{ color: COLORS.muted }}>{shared ? "כפול" : nameOf(room, idx[w][0])}</span>
-                  </button>
-                );
-              })}
-              {allWords.length === 0 && <p className="text-sm" style={{ color: COLORS.muted }}>לא נמצאו מילים</p>}
-            </div>
-            <div className="flex shrink-0 flex-wrap justify-center gap-1.5">
-              {room.players.map((p) => <span key={p.id} className="text-xs font-bold" style={{ color: COLORS.amber }}>{p.name}: {gains[p.id] || 0}</span>)}
+            <p className="shrink-0 text-xs" style={{ color: COLORS.muted }}>לכל שחקן יש עמודה עם המילים שלו. מילה כפולה נמחקת אוטומטית. מילה מפוקפקת? לחצו עליה כדי למחוק אותה (ושוב כדי להחזיר).</p>
+            <div className="grid min-h-0 w-full flex-1 auto-cols-fr grid-flow-col gap-2 overflow-auto">
+              {room.players.map((p) => (
+                <div key={p.id} className="flex min-h-0 min-w-[6.5rem] flex-col gap-1 overflow-y-auto rounded-xl border p-1.5" style={{ borderColor: COLORS.border, background: COLORS.surface }}>
+                  <div className="shrink-0 text-center text-xs font-black" style={{ color: COLORS.amber }}>{p.name} ({gains[p.id] || 0})</div>
+                  {[...(B.words[p.id] || [])].sort((a, b) => [...b].length - [...a].length || a.localeCompare(b, "he")).map((w) => {
+                    const shared = idx[w].length > 1;
+                    const removed = B.removed.includes(w);
+                    const dead = shared || removed;
+                    return (
+                      <button key={w} disabled={shared} onClick={() => dispatch({ type: "BOG_TOGGLE", word: w })} className="rounded-lg border px-2 py-0.5 text-sm font-bold" style={{ borderColor: removed ? COLORS.coral : COLORS.border, color: dead ? COLORS.muted : COLORS.text, textDecoration: dead ? "line-through" : "none" }}>
+                        {w} {shared && <span className="text-[10px]">כפול</span>}
+                      </button>
+                    );
+                  })}
+                  {(B.words[p.id] || []).length === 0 && <span className="text-center text-[11px]" style={{ color: COLORS.muted }}>אין מילים</span>}
+                </div>
+              ))}
             </div>
             <Btn variant="primary" onClick={() => dispatch({ type: "BOG_FINISH" })}><Trophy size={18} /> סיום וחישוב ניקוד</Btn>
           </>
@@ -380,6 +381,17 @@ export function PlayerBoggle({ room, dispatch, myId }) {
         })}
       </div>
       <div className="shrink-0 text-center text-2xl font-black" style={{ color: COLORS.emerald }}>{gain} נקודות</div>
+      <details className="shrink-0 rounded-xl border p-2" style={{ borderColor: COLORS.border }}>
+        <summary className="text-center text-sm font-bold" style={{ color: COLORS.text }}>הרשימות של כולם (לערעור)</summary>
+        <div className="mt-2 max-h-[30dvh] space-y-2 overflow-y-auto">
+          {room.players.map((p) => (
+            <div key={p.id} className="text-xs" style={{ color: COLORS.muted }}>
+              <span className="font-black" style={{ color: COLORS.amber }}>{p.name}: </span>
+              {(B.words[p.id] || []).map((w) => <span key={w} className="ml-1.5" style={{ textDecoration: (idx[w] || []).length > 1 || B.removed.includes(w) ? "line-through" : "none" }}>{w}</span>)}
+            </div>
+          ))}
+        </div>
+      </details>
     </div>
   );
 }
