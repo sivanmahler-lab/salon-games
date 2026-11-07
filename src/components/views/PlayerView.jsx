@@ -176,10 +176,10 @@ export function PlayerAlias({ room, dispatch, myId }) {
 
 export function PlayerLexicon({ room, dispatch, myId }) {
   const L = room.lexicon;
-  const entry = LEXICON[L.wordIdx];
+  const entry = LEXICON[L.wordIdx] || { w: "", d: "" };
   const [text, setText] = useState("");
-  const mine = L.defs[myId];
-  const myVote = L.votes[myId];
+  const mine = L.defs?.[myId];
+  const myVote = L.votes?.[myId];
   const gain = L.gains?.[myId] || 0;
   const roundKey = `${L.cursor}`;
   useEffect(() => { setText(""); }, [roundKey]);
@@ -191,6 +191,16 @@ export function PlayerLexicon({ room, dispatch, myId }) {
     </div>
   );
   const wrapCls = "relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col gap-3 overflow-hidden px-5 py-4 landscape:max-w-3xl";
+
+  if (L.phase === "level") {
+    return (
+      <div className={wrapCls}>
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-center">
+          <p className="text-lg font-black" style={{ color: COLORS.text }}>המנחה בוחר/ת רמת קושי...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (L.phase === "check") {
     const answered = !!L.seen?.[myId];

@@ -114,6 +114,13 @@ export default function RemoteControl({ room, dispatch, onClose }) {
         {header}
         <Title>לקסיקון לועזי-עברי</Title>
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+          {L.phase === "level" && (
+            <>
+              <p className="text-sm" style={{ color: COLORS.muted }}>בחרו רמת קושי</p>
+              <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_LEVEL", level: "easy" })}>קל</Btn>
+              <Btn full variant="gold" onClick={() => dispatch({ type: "LEX_LEVEL", level: "hard" })}>קשה</Btn>
+            </>
+          )}
           {L.phase === "check" && (
             <>
               <p className="text-sm" style={{ color: COLORS.muted }}>{Object.keys(L.seen || {}).length} מתוך {room.players.length} ענו "לא מכיר"</p>
