@@ -149,12 +149,69 @@ function lexiconReveal(room) {
   return { ...room, players, lexicon: { ...L, phase: "result", gains } };
 }
 
+// Points of the turn in progress are banked when the turn ends (or is handed to someone else mid-way).
+function bankTurn(room, key) {
+  const g = room[key];
+  const turnPlayer = room.players[g.turnIdx];
+  if (!turnPlayer) return room.players;
+  const solo = key === "alias" && g.mode === "solo";
+  return room.players.map((p) => {
+    if (solo) {
+      const n = g.guessed?.[p.id] || 0; // solo alias: the points belong to the players who guessed
+      const own = p.id === turnPlayer.id ? g.correct : 0; // the explainer also earns a point for every word guessed
+      return { ...p, score: p.score + n + own, correct: p.correct + n + own, skips: p.skips + (p.id === turnPlayer.id ? g.skips : 0) };
+    }
+    return p.id === turnPlayer.id ? { ...p, score: p.score + g.correct, correct: p.correct + g.correct, skips: p.skips + g.skips } : p;
+  });
+}
+
+// Takes a player out of the evening at any moment and keeps whatever game is running consistent.
+function removePlayer(room, id) {
+  const idx = room.players.findIndex((p) => p.id === id);
+  const left = room.left?.includes(id) ? room.left : [...(room.left || []), id];
+  if (idx < 0) return { ...room, left };
+  let next = { ...room, left, players: room.players.filter((p) => p.id !== id) };
+  const n = next.players.length;
+  const inGame = ["whoami", "alias", "lexicon", "shrink"].includes(room.screen);
+  if (inGame && n < 2) {
+    return { ...next, screen: "hub", paused: false, whoami: null, shrink: null, alias: null, lexicon: null };
+  }
+  for (const key of ["whoami", "alias"]) {
+    const g = next[key];
+    if (!g || room.screen !== key) continue;
+    if (idx < g.turnIdx) next = { ...next, [key]: { ...g, turnIdx: g.turnIdx - 1 } };
+    else if (idx === g.turnIdx) next = { ...next, [key]: { ...g, turnIdx: g.turnIdx % n, phase: "ready", timeLeft: TURN_SECONDS[key], correct: 0, skips: 0, guessed: {}, won: null, cursor: (g.cursor + 1) % g.deck.length } };
+  }
+  const L = next.lexicon;
+  if (L && room.screen === "lexicon" && L.phase !== "level" && L.phase !== "result") {
+    const drop = (o) => Object.fromEntries(Object.entries(o || {}).filter(([k]) => k !== id));
+    next = { ...next, lexicon: { ...L, seen: drop(L.seen), defs: drop(L.defs), votes: drop(L.votes) } };
+    const L2 = next.lexicon;
+    if (L2.phase === "check" && next.players.every((p) => L2.seen[p.id])) next = { ...next, lexicon: { ...L2, phase: "write", notice: null } };
+    else if (L2.phase === "write" && Object.keys(L2.defs).length && next.players.every((p) => L2.defs[p.id])) next = lexiconToVote(next);
+    else if (L2.phase === "vote" && next.players.every((p) => L2.votes[p.id] || !L2.options.some((o) => o.owner !== p.id))) next = lexiconReveal(next);
+  }
+  const S = next.shrink;
+  if (S && room.screen === "shrink" && S.psychId === id) next = { ...next, shrink: { phase: "select", psychId: next.players[0]?.id || null, rule: "", clues: 0, found: false, totalScore: 0 } };
+  return next;
+}
+
 export function roomReducer(room, action) {
   switch (action.type) {
     case "JOIN": {
-      if (room.players.some((p) => p.id === action.id)) return room;
+      if (room.players.some((p) => p.id === action.id) || room.left?.includes(action.id)) return room;
       const player = { id: action.id, name: action.name, traits: action.traits || [], score: 0, correct: 0, skips: 0, diagnosed: 0 };
       return { ...room, players: [...room.players, player] };
+    }
+    case "LEAVE": // a player leaves (or the host removes someone), at any moment
+      return removePlayer(room, action.id);
+    case "SET_TURN": {
+      // the host hands the turn to a specific player, at any moment (the points of the interrupted turn are kept)
+      const key = action.game;
+      const g = room[key];
+      if (!g || room.screen !== key || !room.players[action.idx]) return room;
+      const players = g.phase === "playing" || g.phase === "turnEnd" ? (g.phase === "playing" ? bankTurn(room, key) : room.players) : room.players;
+      return { ...room, players, [key]: { ...g, turnIdx: action.idx, phase: "ready", timeLeft: TURN_SECONDS[key] || 60, correct: 0, skips: 0, guessed: {}, won: null, cursor: (g.cursor + 1) % g.deck.length } };
     }
     case "SET_CONFIG":
       return { ...room, ...action.patch };
@@ -267,16 +324,7 @@ export function roomReducer(room, action) {
       if (!g || g.phase !== "playing" || room.paused) return room; // the clock waits while paused
       const timeLeft = g.timeLeft - 1;
       if (timeLeft <= 0) {
-        const turnPlayer = room.players[g.turnIdx];
-        const solo = key === "alias" && g.mode === "solo";
-        const players = room.players.map((p) => {
-          if (solo) {
-            const n = g.guessed?.[p.id] || 0; // solo alias: the points belong to the players who guessed
-            const own = p.id === turnPlayer.id ? g.correct : 0; // the explainer also earns a point for every word guessed
-            return { ...p, score: p.score + n + own, correct: p.correct + n + own, skips: p.skips + (p.id === turnPlayer.id ? g.skips : 0) };
-          }
-          return p.id === turnPlayer.id ? { ...p, score: p.score + g.correct, correct: p.correct + g.correct, skips: p.skips + g.skips } : p;
-        });
+        const players = bankTurn(room, key);
         return { ...room, players, [key]: { ...g, timeLeft: 0, phase: "turnEnd" } };
       }
       return { ...room, [key]: { ...g, timeLeft } };

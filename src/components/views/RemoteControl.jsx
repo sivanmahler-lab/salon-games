@@ -2,6 +2,7 @@ import React from "react";
 import { Play, Pause, SkipForward, ThumbsUp, ArrowLeft, Home, Trophy, Sparkles, RefreshCw, Stethoscope } from "lucide-react";
 import { COLORS, GAME_DEFS } from "../../constants/theme";
 import { Btn, Avatar } from "../common/UIComponents";
+import PlayersPanel from "../common/PlayersPanel";
 
 /* Host remote: lets one phone press the host buttons (start the evening, pick a game, start a turn,
    "got it" / "skip", pause, next turn), so nobody has to walk up to the TV or use its remote.
@@ -13,7 +14,20 @@ function Title({ children }) {
   return <div className="shrink-0 text-center text-lg font-black" style={{ color: COLORS.text }}>{children}</div>;
 }
 
-export default function RemoteControl({ room, dispatch, onClose }) {
+export default function RemoteControl(props) {
+  const { room, dispatch, roomCode } = props;
+  const joinUrl = `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(roomCode || "")}`;
+  const turnKey = room.screen === "whoami" || room.screen === "alias" ? room.screen : null;
+  const showPanel = ["hub", "whoami", "alias", "lexicon", "shrink"].includes(room.screen);
+  return (
+    <>
+      <RemoteInner {...props} />
+      {showPanel && <PlayersPanel room={room} dispatch={dispatch} joinUrl={joinUrl} roomCode={roomCode} gameKey={turnKey} onBack={room.screen === "hub" ? null : () => dispatch({ type: "BACK_TO_HUB" })} />}
+    </>
+  );
+}
+
+function RemoteInner({ room, dispatch, onClose }) {
   const screen = room.screen;
   const back = () => dispatch({ type: "BACK_TO_HUB" });
   const header = (

@@ -402,6 +402,7 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
   }, [roomCode]);
 
   const dispatch = useCallback((action) => channelRef.current?.send({ type: "ACTION", action }), []);
+  const leave = () => { channelRef.current?.send({ type: "ACTION", action: { type: "LEAVE", id: myId } }); setTimeout(onExit, 150); };
 
   if (!room) {
     return (
@@ -426,10 +427,21 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
     );
   }
 
+  if (room.left?.includes(myId)) {
+    return (
+      <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
+        <Logo />
+        <div className="text-lg font-black" style={{ color: COLORS.text }}>יצאת מהמשחק</div>
+        <p className="text-sm" style={{ color: COLORS.muted }}>המנחה הוציא/ה אותך מהחדר. אפשר להצטרף מחדש בסריקת ה-QR.</p>
+        <Btn variant="ghost" onClick={onExit}>חזרה</Btn>
+      </div>
+    );
+  }
+
   return (
     <>
       {remote ? (
-        <RemoteControl room={room} dispatch={dispatch} />
+        <RemoteControl room={room} dispatch={dispatch} roomCode={roomCode} />
       ) : (
         <>
           <PlayerScreen room={room} dispatch={dispatch} myId={myId} name={name} />
@@ -443,6 +455,13 @@ export default function PlayerApp({ roomCode, name, traits, onExit }) {
         style={{ borderColor: remote ? COLORS.amber : COLORS.border, background: remote ? COLORS.amber : "rgba(9,13,22,0.85)", color: remote ? "#0b0f1a" : COLORS.muted }}
       >
         {remote ? "חזרה למסך שלי" : "🎛 שלט מנחה"}
+      </button>
+      <button
+        onClick={() => { if (window.confirm("לצאת מהמשחק?")) leave(); }}
+        className="fixed left-2 top-2 z-[70] rounded-full border px-2.5 py-1 text-[10px] font-bold"
+        style={{ borderColor: COLORS.border, background: "rgba(9,13,22,0.85)", color: COLORS.coral }}
+      >
+        יציאה מהמשחק
       </button>
     </>
   );

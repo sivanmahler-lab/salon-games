@@ -7,6 +7,7 @@ import { COLORS, CATEGORIES, GAME_DEFS } from "../../constants/theme";
 import { createRoomChannel, generateRoomCode, normalizeRoomCode, roomReducer, createInitialRoom } from "../../utils/roomSync";
 import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar, WinBanner } from "../common/UIComponents";
 import { Podium } from "./Podium";
+import PlayersPanel from "../common/PlayersPanel";
 import { notifyJoin } from "../../utils/notify";
 import { useEndBeep, useBeepWhen } from "../../utils/soloHelpers";
 import { LEXICON } from "../../data/lexicon";
@@ -592,8 +593,14 @@ export default function HostApp({ onExit, kind = "tv" }) {
 
   if (!setupDone) return <HostSetup kind={kind} onContinue={() => setSetupDone(true)} onBack={onExit} />;
 
+  const joinUrl = `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(roomCode)}`;
+  const turnKey = room.screen === "whoami" || room.screen === "alias" ? room.screen : null;
+
   return (
     <>
+      {["hub", "whoami", "alias", "lexicon", "shrink"].includes(room.screen) && (
+        <PlayersPanel room={room} dispatch={localDispatch} joinUrl={joinUrl} roomCode={roomCode} gameKey={turnKey} onBack={room.screen === "hub" ? null : backToHub} onExit={onExit} />
+      )}
       {room.screen === "lobby" && <HostLobby room={room} dispatch={localDispatch} roomCode={roomCode} onExit={onExit} kind={kind} />}
       {room.screen === "hub" && <HostHub room={room} dispatch={localDispatch} onPodium={() => localDispatch({ type: "GO_PODIUM" })} onLobby={() => localDispatch({ type: "BACK_TO_LOBBY" })} />}
       {room.screen === "whoami" && <HostWhoAmI room={room} dispatch={localDispatch} onBack={backToHub} />}
