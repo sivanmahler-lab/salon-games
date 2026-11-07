@@ -183,6 +183,7 @@ function RemoteInner({ room, dispatch, onClose }) {
         {s.phase === "diagnose" && (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
             <p className="text-sm" style={{ color: COLORS.muted }}>הפסיכולוג מנסה לגלות את הכלל. רמזים: {s.clues}</p>
+            <Btn full variant="subtle" onClick={() => dispatch({ type: "SHRINK_REROLL" })}><RefreshCw size={18} /> לא בא לנו על הכלל, החליפו</Btn>
             <Btn full variant="primary" onClick={() => dispatch({ type: "SHRINK_FINISH" })}><Trophy size={18} /> סיום הסיבוב</Btn>
           </div>
         )}

@@ -365,6 +365,14 @@ export function roomReducer(room, action) {
       const rule = buildShrinkRule();
       return { ...room, shrink: { ...room.shrink, rule, clues: 0, found: false, phase: "diagnose" } };
     }
+    case "SHRINK_REROLL": {
+      // nobody feels like this rule: swap it for a different one and start the round's clues over
+      const S = room.shrink;
+      if (!S || S.phase !== "diagnose" || S.found) return room;
+      let rule = buildShrinkRule();
+      for (let i = 0; i < 20 && rule === S.rule; i++) rule = buildShrinkRule();
+      return { ...room, shrink: { ...S, rule, clues: 0 } };
+    }
     case "SHRINK_CLUE":
       return { ...room, shrink: { ...room.shrink, clues: room.shrink.clues + 1 } };
     case "SHRINK_DIAGNOSE":

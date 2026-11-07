@@ -464,6 +464,9 @@ export function HostShrink({ room, dispatch, onBack }) {
           <div className="flex items-center gap-2 text-sm font-bold" style={{ color: COLORS.muted }}>
             רמזים: {s.clues} {s.found && <Check size={16} color={COLORS.emerald} />}
           </div>
+          {!s.found && (
+            <Btn variant="subtle" onClick={() => dispatch({ type: "SHRINK_REROLL" })}><RefreshCw size={16} /> לא בא לנו על הכלל הזה, החליפו כלל</Btn>
+          )}
           {s.found && s.rule && (
             <div className="rounded-2xl border-2 px-6 py-4" style={{ borderColor: COLORS.emerald, background: `${COLORS.emerald}22` }}>
               <div className="text-sm font-bold" style={{ color: COLORS.emerald }}>🎉 {psych?.name} גילה/תה! הכלל היה</div>
