@@ -74,7 +74,7 @@ const GAMES = [
     ],
   },
   {
-    title: "בוגל בעברית",
+    title: "Boggle בוגל",
     color: COLORS.emerald,
     goal: "למצוא הכי הרבה מילים בלוח של 16 אותיות.",
     steps: [

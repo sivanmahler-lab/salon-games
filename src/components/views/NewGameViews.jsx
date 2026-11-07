@@ -241,7 +241,7 @@ export function HostBoggle({ room, dispatch, onBack }) {
   return (
     <div className={hostWrap}>
       <TopBar
-        title={`בוגל בעברית, סבב ${B.round}`}
+        title={`Boggle בוגל, סבב ${B.round}`}
         onBack={onBack}
         right={B.phase === "play" ? fmt(B.timeLeft) : ""}
         helpTitle="איך משחקים בבוגל"
@@ -342,7 +342,7 @@ export function PlayerBoggle({ room, dispatch, myId }) {
     return (
       <div className={phoneWrap}>
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-          <div className="text-xl font-black" style={{ color: COLORS.text }}>בוגל בעברית</div>
+          <div className="text-xl font-black" style={{ color: COLORS.text }}>Boggle בוגל</div>
           <p className="text-sm" style={{ color: COLORS.muted }}>ממתינים שהמנחה יתחיל. מקישים על אותיות סמוכות כדי ליצור מילים.</p>
         </div>
       </div>
@@ -419,7 +419,7 @@ export function RemoteNewGame({ room, dispatch, screen, back, wrap, header, Titl
   return (
     <div className={wrap}>
       {header}
-      <Title>בוגל בעברית</Title>
+      <Title>Boggle בוגל</Title>
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
         {B.phase === "ready" && <Btn full variant="primary" onClick={() => dispatch({ type: "BOG_BEGIN" })}>התחלה</Btn>}
         {B.phase === "play" && (<><div className="text-3xl font-black" style={{ color: COLORS.amber }}>{fmt(B.timeLeft)}</div><Btn full variant="ghost" onClick={() => dispatch({ type: "BOG_END" })}>סיום מוקדם</Btn></>)}

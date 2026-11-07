@@ -42,5 +42,5 @@ export const GAME_DEFS = [
   { id: "alias", title: "אליאס סלון", desc: "60 שניות, מסבירים מילה בלי להגיד אותה", icon: Zap, color: COLORS.amber },
   { id: "lexicon", title: "לקסיקון לועזי-עברי", desc: "מילה לועזית אחת, כולם ממציאים לה הגדרה, ומנחשים את האמיתית", icon: BookOpen, color: COLORS.sky },
   { id: "imposter", title: "המתחזה", desc: "כולם מקבלים מילה סודית חוץ ממתחזה אחד, ומנסים לחשוף אותו", icon: Ghost, color: COLORS.coral },
-  { id: "boggle", title: "בוגל בעברית", desc: "לוח של 16 אותיות, 3 דקות, מי מוצא הכי הרבה מילים", icon: Grid3x3, color: COLORS.emerald },
+  { id: "boggle", title: "Boggle בוגל", desc: "לוח של 16 אותיות, 3 דקות, מי מוצא הכי הרבה מילים", icon: Grid3x3, color: COLORS.emerald },
 ];
