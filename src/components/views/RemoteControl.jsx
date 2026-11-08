@@ -39,14 +39,14 @@ function RemoteInner({ room, dispatch, onClose }) {
   );
 
   if (screen === "lobby") {
-    const can = room.players.length >= 3;
+    const can = room.players.length >= 2;
     return (
       <div className={wrap}>
         {header}
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
           <Sparkles size={40} color={COLORS.purple} />
           <Title>מתחילים את הערב</Title>
-          <p className="text-sm" style={{ color: COLORS.muted }}>{can ? "כולם הצטרפו? אפשר להתחיל." : "נדרשים 3 שחקנים לפחות."}</p>
+          <p className="text-sm" style={{ color: COLORS.muted }}>{can ? "כולם הצטרפו? אפשר להתחיל." : "נדרשים 2 שחקנים לפחות."}</p>
           <Btn full variant="primary" disabled={!can} onClick={() => dispatch({ type: "START_HUB" })}><Sparkles size={18} /> התחילו את הערב</Btn>
         </div>
       </div>
@@ -60,12 +60,12 @@ function RemoteInner({ room, dispatch, onClose }) {
         {header}
         <Title>בחרו משחק</Title>
         <div className="flex min-h-0 flex-1 flex-col justify-center gap-3">
-          {GAME_DEFS.filter((g) => room.enabledGames.includes(g.id)).map((g) => (
-            <button key={g.id} onClick={() => dispatch({ type: "START_GAME", game: g.id })} className="rounded-2xl border p-4 text-right" style={{ borderColor: g.color, background: `${g.color}1a` }}>
+          {GAME_DEFS.filter((g) => room.enabledGames.includes(g.id)).map((g) => { const need3 = (g.id === "imposter" || g.id === "shrink") && room.players.length < 3; return (
+            <button key={g.id} disabled={need3} onClick={() => dispatch({ type: "START_GAME", game: g.id })} className={`rounded-2xl border p-4 text-right ${need3 ? "opacity-40" : ""}`} style={{ borderColor: g.color, background: `${g.color}1a` }}>
               <div className="font-black" style={{ color: COLORS.text }}>{g.title}</div>
-              <div className="text-xs" style={{ color: COLORS.muted }}>{g.desc}</div>
+              <div className="text-xs" style={{ color: COLORS.muted }}>{need3 ? "דרושים 3 שחקנים לפחות" : g.desc}</div>
             </button>
-          ))}
+          ); })}
         </div>
         <Btn full variant="gold" disabled={!anyScore} onClick={() => dispatch({ type: "GO_PODIUM" })}><Trophy size={18} /> לוח התוצאות</Btn>
       </div>

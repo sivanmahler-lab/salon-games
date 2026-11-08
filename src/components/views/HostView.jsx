@@ -24,7 +24,7 @@ import { saveNight, loadBoard, clearBoard, shareScores, cheer } from "../../util
 export function HostLobby({ room, dispatch, roomCode, onExit, kind = "tv" }) {
   const joinUrl = typeof window !== "undefined" ? `${window.location.origin}${window.location.pathname}?join=${encodeURIComponent(roomCode)}` : roomCode;
   const [copied, setCopied] = useState(false);
-  const canStart = room.players.length >= 3;
+  const canStart = room.players.length >= 2;
 
   return (
     <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 landscape:max-w-6xl">
@@ -111,7 +111,7 @@ export function HostLobby({ room, dispatch, roomCode, onExit, kind = "tv" }) {
         <Btn full variant="primary" disabled={!canStart} onClick={() => dispatch({ type: "START_HUB" })}>
           <Sparkles size={18} /> התחילו את הערב
         </Btn>
-        {!canStart && <p className="mt-1 text-center text-[11px]" style={{ color: COLORS.muted }}>נדרשים 3 שחקנים מחוברים לפחות</p>}
+        {!canStart && <p className="mt-1 text-center text-[11px]" style={{ color: COLORS.muted }}>נדרשים 2 שחקנים מחוברים לפחות</p>}
       </div>
     </div>
   );
@@ -154,11 +154,13 @@ export function HostHub({ room, dispatch, onPodium, onLobby }) {
       <div className={`grid min-h-0 flex-1 grid-cols-1 content-start gap-3 overflow-y-auto landscape:content-stretch landscape:overflow-y-auto landscape:[grid-auto-rows:minmax(6rem,1fr)] ${games.length >= 7 ? "landscape:grid-cols-4" : games.length >= 4 ? "landscape:grid-cols-3" : "landscape:grid-cols-3"}`}>
         {games.map((g) => {
           const Icon = g.icon;
+          const need3 = (g.id === "imposter" || g.id === "shrink") && room.players.length < 3;
           return (
             <button
               key={g.id}
+              disabled={need3}
               onClick={() => dispatch({ type: "START_GAME", game: g.id })}
-              className="flex w-full items-center gap-4 rounded-2xl border p-4 text-right transition-all active:scale-[0.98] landscape:flex-col landscape:justify-center landscape:text-center"
+              className={`flex w-full ${need3 ? "opacity-40" : ""} items-center gap-4 rounded-2xl border p-4 text-right transition-all active:scale-[0.98] landscape:flex-col landscape:justify-center landscape:text-center`}
               style={{ borderColor: COLORS.border, background: COLORS.surface }}
             >
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl" style={{ background: `${g.color}22` }}>
@@ -166,7 +168,7 @@ export function HostHub({ room, dispatch, onPodium, onLobby }) {
               </div>
               <div className="flex-1">
                 <div className="font-black" style={{ color: COLORS.text }}>{g.title}</div>
-                <div className="text-xs" style={{ color: COLORS.muted }}>{g.desc}</div>
+                <div className="text-xs" style={{ color: COLORS.muted }}>{need3 ? "דרושים 3 שחקנים לפחות" : g.desc}</div>
               </div>
               <ChevronLeft size={20} color={COLORS.muted} className="landscape:hidden" />
             </button>

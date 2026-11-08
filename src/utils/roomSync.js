@@ -236,7 +236,7 @@ export function roomReducer(room, action) {
     case "SET_CONFIG":
       return { ...room, ...action.patch };
     case "START_HUB":
-      return room.players.length >= 3 ? { ...room, screen: "hub" } : room;
+      return room.players.length >= 2 ? { ...room, screen: "hub" } : room;
     case "BACK_TO_HUB":
       return { ...room, screen: "hub", paused: false };
     case "GO_PODIUM":
@@ -263,6 +263,7 @@ export function roomReducer(room, action) {
         return { ...room, screen: "alias", alias: { ...startTurnGameState(room.players, shuffle(buildAliasDeck(room.players)), TURN_SECONDS.alias), mode, guessed: {} } };
       }
       if (action.game === "shrink") {
+        if (room.players.length < 3) return room; // needs a psychologist and at least two others
         return { ...room, screen: "shrink", shrink: { phase: "select", psychId: null, rule: "", clues: 0, found: false, totalScore: 0 } };
       }
       if (action.game === "lexicon") {
