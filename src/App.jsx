@@ -5,6 +5,7 @@ import EntryScreen from "./components/views/EntryScreen";
 import HostApp from "./components/views/HostView";
 import PlayerApp from "./components/views/PlayerView";
 import SoloApp from "./components/solo/SoloApp";
+import GuideScreen from "./components/views/GuideScreen";
 import { SettingsButton } from "./components/common/ScoreButton";
 import { loadPrefs, savePref, applyLook, setSoundOn } from "./utils/extras";
 
@@ -31,6 +32,12 @@ export default function App() {
     return new URLSearchParams(window.location.search).get("join") || "";
   });
 
+  const [next, setNext] = useState(null); // the mode chosen on the first screen, shown after the optional guide
+  const goNext = () => {
+    if (next?.type === "solo") setMode("solo");
+    else { setHostKind(next?.kind || "tv"); setMode("host"); }
+    setNext(null);
+  };
   const exitToEntry = () => {
     setMode("entry");
     setJoinInfo(null);
@@ -54,16 +61,17 @@ export default function App() {
       {mode === "entry" && (
         <EntryScreen
           prefillCode={prefillCode}
-          onHost={(kind) => { setHostKind(kind || "tv"); setMode("host"); }}
-          onSolo={() => setMode("solo")}
+          onHost={(kind) => { setNext({ type: "host", kind: kind || "tv" }); setMode("guide"); }}
+          onSolo={() => { setNext({ type: "solo" }); setMode("guide"); }}
           onJoin={(info) => {
             setJoinInfo(info);
             setMode("player");
           }}
         />
       )}
+      {mode === "guide" && <GuideScreen onDone={goNext} onSkip={goNext} onBack={() => { setNext(null); setMode("entry"); }} />}
       {mode === "host" && <HostApp onExit={exitToEntry} kind={hostKind} resume={resume} />}
-      <SettingsButton prefs={prefs} onChange={changePref} showGear={mode === "entry"} />
+      <SettingsButton prefs={prefs} onChange={changePref} showGear={mode === "entry" || mode === "guide"} />
       {mode === "solo" && <SoloApp onExit={exitToEntry} />}
       {mode === "player" && joinInfo && <PlayerApp {...joinInfo} onExit={exitToEntry} onTakeover={(r) => { setResume(r); setJoinInfo(null); setMode("host"); }} />}
     </div>
