@@ -10,6 +10,7 @@ import { PlayerImposter, PlayerBoggle } from "./NewGameViews";
 import { LEXICON } from "../../data/lexicon";
 import { useEndBeep, useBeepWhen } from "../../utils/soloHelpers";
 import ScoreButton from "../common/ScoreButton";
+import JoinLeaveToasts from "../common/JoinLeaveToasts";
 import { shareScores, cheer, buzz } from "../../utils/extras";
 
 /* ============================================================================
@@ -459,6 +460,7 @@ export default function PlayerApp({ roomCode, name, traits, onExit, onTakeover }
   const hostGone = !offline && silentFor >= 25;
   return (
     <>
+      <JoinLeaveToasts players={room.players} />
       {(offline || silentFor >= 12) && (
         <div role="alert" className="fixed inset-x-0 top-0 z-[88] flex flex-col items-center gap-1 px-3 py-2 text-center text-xs font-bold" style={{ background: COLORS.coral, color: "#fff" }}>
           <div className="flex items-center gap-1.5"><WifiOff size={14} /> {offline ? "אין חיבור לאינטרנט בטלפון הזה. מנסים להתחבר מחדש..." : "המנחה לא עונה כרגע. מנסים להתחבר מחדש..."}</div>

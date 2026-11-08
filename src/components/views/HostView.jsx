@@ -14,6 +14,7 @@ import { LEXICON } from "../../data/lexicon";
 import { HostImposter, HostBoggle } from "./NewGameViews";
 import { TEAM_NAMES, teamTotals } from "../../game/aliasLogic";
 import ScoreButton from "../common/ScoreButton";
+import JoinLeaveToasts from "../common/JoinLeaveToasts";
 import { saveNight, loadBoard, clearBoard, shareScores, cheer } from "../../utils/extras";
 
 /* ============================================================================
@@ -555,7 +556,7 @@ export function HostPodium({ room, dispatch, onExit }) {
       players={room.players}
       actions={
         <div className="space-y-2.5">
-          <Btn full variant="primary" onClick={() => dispatch({ type: "PLAY_AGAIN" })}><RefreshCw size={18} /> סיבוב נוסף</Btn>
+          <Btn full variant="primary" onClick={() => dispatch({ type: "BACK_TO_HUB" })}><ArrowLeft size={18} /> חזרה למשחקים (הניקוד נשמר)</Btn>
           <div className="grid grid-cols-2 gap-2">
             <Btn full variant="gold" onClick={() => shareScores(room.players)}>📤 שיתוף תמונה</Btn>
             <BoardButton />
@@ -669,7 +670,8 @@ export default function HostApp({ onExit, kind = "tv", resume = null }) {
 
   return (
     <>
-      {["hub", "whoami", "alias", "lexicon", "shrink", "imposter", "boggle"].includes(room.screen) && (
+      <JoinLeaveToasts players={room.players} />
+      {["hub", "whoami", "alias", "lexicon", "shrink", "imposter", "boggle", "podium"].includes(room.screen) && (
         <PlayersPanel room={room} dispatch={localDispatch} joinUrl={joinUrl} roomCode={roomCode} gameKey={turnKey} onBack={room.screen === "hub" ? null : backToHub} onExit={onExit} />
       )}
       {["hub", "whoami", "alias", "lexicon", "shrink", "imposter", "boggle"].includes(room.screen) && <ScoreButton rows={room.players.map((p) => ({ name: p.name, score: p.score || 0 }))} />}
