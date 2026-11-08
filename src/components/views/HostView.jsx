@@ -556,7 +556,7 @@ export function HostPodium({ room, dispatch, onExit }) {
       players={room.players}
       actions={
         <div className="space-y-2.5">
-          <Btn full variant="primary" onClick={() => dispatch({ type: "BACK_TO_HUB" })}><ArrowLeft size={18} /> חזרה למשחקים (הניקוד נשמר)</Btn>
+          <Btn full variant="primary" onClick={() => dispatch({ type: "BACK_TO_HUB" })}><ArrowLeft size={18} /> חזרה למשחקים</Btn>
           <div className="grid grid-cols-2 gap-2">
             <Btn full variant="gold" onClick={() => shareScores(room.players)}>📤 שיתוף תמונה</Btn>
             <BoardButton />
