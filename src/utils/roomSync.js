@@ -409,6 +409,12 @@ export function roomReducer(room, action) {
       const L = room.lexicon;
       return L && L.phase === "vote" ? lexiconReveal(room) : room;
     }
+    case "LEX_SKIP": { // anyone can swap the word before the answer is revealed
+      const L = room.lexicon;
+      if (!L || !["check", "write", "vote"].includes(L.phase)) return room;
+      const by = room.players.find((p) => p.id === action.id)?.name || "המנחה";
+      return { ...room, lexicon: lexiconRound(L.deck, L.cursor + 1, { word: LEXICON[L.wordIdx].w, by, swapped: true }) };
+    }
     case "LEX_NEXT": {
       const L = room.lexicon;
       if (!L || L.phase !== "result") return room;

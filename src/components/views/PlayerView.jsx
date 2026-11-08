@@ -213,7 +213,7 @@ export function PlayerLexicon({ room, dispatch, myId }) {
         {head}
         {L.notice && (
           <div className="shrink-0 rounded-xl border px-3 py-2 text-center text-sm font-bold" style={{ borderColor: COLORS.amber, color: COLORS.amber }}>
-            המילה הקודמת ({L.notice.word}) הייתה מוכרת ל{L.notice.by}, ולכן הוחלפה
+            {L.notice.swapped ? `המילה הקודמת (${L.notice.word}) הוחלפה על ידי ${L.notice.by}` : `המילה הקודמת (${L.notice.word}) הייתה מוכרת ל${L.notice.by}, ולכן הוחלפה`}
           </div>
         )}
         <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 text-center">
@@ -226,6 +226,7 @@ export function PlayerLexicon({ room, dispatch, myId }) {
         </div>
         <Btn full variant="primary" disabled={answered} onClick={() => dispatch({ type: "LEX_KNOW", id: myId, known: false })}>לא מכיר/ה</Btn>
         <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_KNOW", id: myId, known: true })}>מכיר/ה את המילה</Btn>
+        <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP", id: myId })}>🔄 החלפת מילה</Btn>
       </div>
     );
   }
@@ -246,6 +247,7 @@ export function PlayerLexicon({ room, dispatch, myId }) {
         />
         <Btn full variant="primary" disabled={!text.trim()} onClick={() => dispatch({ type: "LEX_SUBMIT", id: myId, text })}>{mine ? "עדכון ההגדרה" : "שליחה"}</Btn>
         {mine && <p className="shrink-0 text-center text-xs" style={{ color: COLORS.emerald }}>ההגדרה נשלחה ✓ אפשר לעדכן עד שכולם מסיימים</p>}
+        <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP", id: myId })}>🔄 החלפת מילה</Btn>
       </div>
     );
   }
@@ -254,8 +256,8 @@ export function PlayerLexicon({ room, dispatch, myId }) {
     return (
       <div className={wrapCls}>
         {head}
-        <p className="shrink-0 text-center text-sm" style={{ color: COLORS.muted }}>המנחה מקריא את ההגדרות. הקישו על המספר של ההגדרה שנראית לכם אמיתית</p>
-        <div className="grid min-h-0 flex-1 content-center grid-cols-3 gap-3 overflow-y-auto landscape:grid-cols-5">
+        <p className="shrink-0 text-center text-sm" style={{ color: COLORS.muted }}>איזו הגדרה נראית לכם אמיתית? הקישו עליה</p>
+        <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
           {L.options.map((o, i) => {
             const own = o.owner === myId;
             const chosen = myVote === o.id;
@@ -265,16 +267,17 @@ export function PlayerLexicon({ room, dispatch, myId }) {
                 disabled={own}
                 aria-label={`הגדרה ${i + 1}${own ? " (שלך)" : ""}`}
                 onClick={() => dispatch({ type: "LEX_VOTE", id: myId, option: o.id })}
-                className="flex aspect-square flex-col items-center justify-center rounded-2xl border-2 text-3xl font-black disabled:opacity-30"
-                style={{ borderColor: chosen ? COLORS.sky : COLORS.border, background: chosen ? `${COLORS.sky}33` : COLORS.surface, color: chosen ? COLORS.sky : COLORS.text }}
+                className="flex items-center gap-3 rounded-2xl border-2 p-3 text-right disabled:opacity-40"
+                style={{ borderColor: chosen ? COLORS.sky : COLORS.border, background: chosen ? `${COLORS.sky}33` : COLORS.surface, color: COLORS.text }}
               >
-                {i + 1}
-                {own && <span className="text-[0.6rem] font-bold" style={{ color: COLORS.muted }}>שלך</span>}
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-black" style={{ background: `${COLORS.sky}33`, color: COLORS.sky }}>{i + 1}</span>
+                <span className="flex-1 text-base font-bold">{o.text}{own && <span className="mr-2 text-xs" style={{ color: COLORS.muted }}> (שלך)</span>}</span>
               </button>
             );
           })}
         </div>
         <p className="shrink-0 text-center text-xs" style={{ color: myVote ? COLORS.emerald : COLORS.muted }}>{myVote ? "ההצבעה נקלטה ✓ אפשר לשנות" : "עוד לא הצבעת"}</p>
+        <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP", id: myId })}>🔄 החלפת מילה</Btn>
       </div>
     );
   }
@@ -286,8 +289,8 @@ export function PlayerLexicon({ room, dispatch, myId }) {
         <div className="text-xs font-bold" style={{ color: COLORS.emerald }}>ההגדרה האמיתית</div>
         <div className="rounded-2xl border-2 p-4 text-base font-black" style={{ borderColor: COLORS.emerald, background: `${COLORS.emerald}1a`, color: COLORS.text }}>{entry.d}</div>
         <div className="text-lg font-black" style={{ color: gain ? COLORS.amber : COLORS.muted }}>{gain ? `קיבלת ${gain} ${gain === 1 ? "נקודה" : "נקודות"}` : "הפעם בלי נקודות"}</div>
-        <p className="text-xs" style={{ color: COLORS.muted }}>ממתינים שהמנחה יעבור למילה הבאה...</p>
       </div>
+      <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_NEXT" })}>מילה הבאה</Btn>
     </div>
   );
 }

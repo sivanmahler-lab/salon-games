@@ -305,7 +305,7 @@ export function HostBoggle({ room, dispatch, onBack }) {
                 <div key={p.id} className="rounded-xl border px-3 py-1.5 text-sm font-bold" style={{ borderColor: COLORS.border, color: COLORS.text }}>{p.name} <span style={{ color: COLORS.emerald }}>+{B.gains[p.id] || 0}</span></div>
               ))}
             </div>
-            <Btn variant="primary" onClick={() => dispatch({ type: "BOG_NEXT" })}><RefreshCw size={18} /> סבב נוסף</Btn>
+            <Btn variant="primary" onClick={() => dispatch({ type: "BOG_NEXT" })}><RefreshCw size={18} /> סבב חדש</Btn>
           </>
         )}
       </div>
@@ -381,6 +381,7 @@ export function PlayerBoggle({ room, dispatch, myId }) {
         })}
       </div>
       <div className="shrink-0 text-center text-2xl font-black" style={{ color: COLORS.emerald }}>{gain} נקודות</div>
+      {B.phase === "result" && <Btn full variant="primary" onClick={() => dispatch({ type: "BOG_NEXT" })}>סבב חדש</Btn>}
       <details className="shrink-0 rounded-xl border p-2" style={{ borderColor: COLORS.border }}>
         <summary className="text-center text-sm font-bold" style={{ color: COLORS.text }}>הרשימות של כולם (לערעור)</summary>
         <div className="mt-2 max-h-[30dvh] space-y-2 overflow-y-auto">
@@ -424,7 +425,7 @@ export function RemoteNewGame({ room, dispatch, screen, back, wrap, header, Titl
         {B.phase === "ready" && <Btn full variant="primary" onClick={() => dispatch({ type: "BOG_BEGIN" })}>התחלה</Btn>}
         {B.phase === "play" && (<><div className="text-3xl font-black" style={{ color: COLORS.amber }}>{fmt(B.timeLeft)}</div><Btn full variant="ghost" onClick={() => dispatch({ type: "BOG_END" })}>סיום מוקדם</Btn></>)}
         {B.phase === "review" && (<><p className="text-sm" style={{ color: COLORS.muted }}>מילים מפוקפקות מוחקים במסך הראשי</p><Btn full variant="primary" onClick={() => dispatch({ type: "BOG_FINISH" })}>סיום וחישוב ניקוד</Btn></>)}
-        {B.phase === "result" && <Btn full variant="primary" onClick={() => dispatch({ type: "BOG_NEXT" })}>סבב נוסף</Btn>}
+        {B.phase === "result" && <Btn full variant="primary" onClick={() => dispatch({ type: "BOG_NEXT" })}>סבב חדש</Btn>}
       </div>
       <Btn full variant="ghost" className="shrink-0" onClick={back}><Home size={18} /> מרכז המשחקים</Btn>
     </div>

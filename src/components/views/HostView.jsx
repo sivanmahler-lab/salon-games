@@ -367,7 +367,7 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
 
         {L.notice && L.phase === "check" && (
           <div className="rounded-xl border px-3 py-1.5 text-sm font-bold" style={{ borderColor: COLORS.amber, color: COLORS.amber }}>
-            המילה הקודמת ({L.notice.word}) הייתה מוכרת ל{L.notice.by}, ולכן הוחלפה
+            {L.notice.swapped ? `המילה הקודמת (${L.notice.word}) הוחלפה על ידי ${L.notice.by}` : `המילה הקודמת (${L.notice.word}) הייתה מוכרת ל${L.notice.by}, ולכן הוחלפה`}
           </div>
         )}
         {L.phase === "check" && (
@@ -375,6 +375,7 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
             <p className="text-sm" style={{ color: COLORS.muted }}>מי שמכיר/ה את המילה לוחצ/ת בטלפון על "מכיר". אם מישהו מכיר, מחליפים מילה. כשכולם לוחצים "לא מכיר", מתחילים.</p>
             <div className="text-lg font-black" style={{ color: COLORS.amber }}>{Object.keys(L.seen || {}).length} מתוך {room.players.length} ענו "לא מכיר"</div>
             <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_START_WRITE" })}>מתחילים בלי לחכות לכולם</Btn>
+            <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP" })}>🔄 החלפת מילה</Btn>
           </>
         )}
         {L.phase === "write" && (
@@ -389,6 +390,7 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
               ))}
             </div>
             <Btn variant="primary" disabled={submitted.length < 1} onClick={() => dispatch({ type: "LEX_TO_VOTE" })}><ArrowLeft size={18} /> כולם סיימו? עוברים להצבעה</Btn>
+            <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP" })}>🔄 החלפת מילה</Btn>
           </>
         )}
 
@@ -411,6 +413,7 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
               ))}
             </div>
             <Btn variant="primary" onClick={() => dispatch({ type: "LEX_REVEAL" })}><Eye size={18} /> חשפו את התשובה</Btn>
+            <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP" })}>🔄 החלפת מילה</Btn>
           </>
         )}
 

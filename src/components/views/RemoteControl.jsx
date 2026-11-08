@@ -156,6 +156,7 @@ function RemoteInner({ room, dispatch, onClose }) {
               <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_REVEAL" })}>חשפו את התשובה</Btn>
             </>
           )}
+          {["check", "write", "vote"].includes(L.phase) && <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP" })}>🔄 החלפת מילה</Btn>}
           {L.phase === "result" && <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_NEXT" })}>מילה הבאה</Btn>}
         </div>
         <Btn full variant="ghost" className="shrink-0" onClick={back}><Home size={18} /> מרכז המשחקים</Btn>
