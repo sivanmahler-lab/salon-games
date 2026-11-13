@@ -194,7 +194,6 @@ function removePlayer(room, id) {
     next = { ...next, lexicon: { ...L, seen: drop(L.seen), defs: drop(L.defs), votes: drop(L.votes) } };
     const L2 = next.lexicon;
     if (L2.phase === "check" && next.players.every((p) => L2.seen[p.id])) next = { ...next, lexicon: { ...L2, phase: "write", notice: null } };
-    else if (L2.phase === "write" && Object.keys(L2.defs).length && next.players.every((p) => L2.defs[p.id])) next = lexiconToVote(next);
     else if (L2.phase === "vote" && next.players.every((p) => L2.votes[p.id] || !L2.options.some((o) => o.owner !== p.id))) next = lexiconReveal(next);
   }
   const I = next.imposter;
