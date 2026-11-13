@@ -220,6 +220,14 @@ export function roomReducer(room, action) {
   switch (action.type) {
     case "JOIN": {
       if (room.players.some((p) => p.id === action.id) || room.left?.includes(action.id)) return room;
+      // Someone joins with a name that is already in the room: this is the same person coming back after their phone
+      // disconnected (new scan of the QR). They get their old seat back (score, turn, answers) instead of a second entry.
+      const clean = (s) => String(s || "").trim();
+      const seat = clean(action.name) && room.players.find((p) => clean(p.name) === clean(action.name));
+      if (seat) {
+        const moved = JSON.parse(JSON.stringify(room).split(seat.id).join(action.id));
+        return { ...moved, left: [...(moved.left || []), seat.id] }; // the old connection, if it is still open somewhere, is closed
+      }
       const player = { id: action.id, name: action.name, traits: action.traits || [], score: 0, correct: 0, skips: 0, diagnosed: 0 };
       return { ...room, players: [...room.players, player] };
     }
@@ -498,6 +506,13 @@ export function roomReducer(room, action) {
       const totalScore = s.found ? Math.max(1, 3 - s.clues) : 0;
       const players = room.players.map((p) => (p.id === s.psychId ? { ...p, score: p.score + totalScore, diagnosed: p.diagnosed + (s.found ? 1 : 0) } : p));
       return { ...room, players, shrink: { ...s, phase: "result", totalScore } };
+    }
+
+    case "SHRINK_AGAIN": {
+      // "another round" straight from the diagnose screen: bank the score, then move on to picking the next psychologist
+      const S = room.shrink;
+      if (!S || S.phase !== "diagnose") return room;
+      return roomReducer(roomReducer(room, { type: "SHRINK_FINISH" }), { type: "SHRINK_NEXT" });
     }
 
     default:

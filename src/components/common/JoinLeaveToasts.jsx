@@ -12,9 +12,12 @@ export default function JoinLeaveToasts({ players }) {
     if (!before) return;
     const ids = new Set(players.map((p) => p.id));
     const old = new Set(before.map((p) => p.id));
+    // a player whose phone reconnected keeps the name but gets a new id: that is neither a join nor a leave
+    const names = new Set(players.map((p) => p.name));
+    const oldNames = new Set(before.map((p) => p.name));
     const fresh = [
-      ...players.filter((p) => !old.has(p.id)).map((p) => ({ k: "join", name: p.name })),
-      ...before.filter((p) => !ids.has(p.id)).map((p) => ({ k: "leave", name: p.name })),
+      ...players.filter((p) => !old.has(p.id) && !oldNames.has(p.name)).map((p) => ({ k: "join", name: p.name })),
+      ...before.filter((p) => !ids.has(p.id) && !names.has(p.name)).map((p) => ({ k: "leave", name: p.name })),
     ].map((x, i) => ({ ...x, id: Date.now() + i }));
     if (!fresh.length) return;
     setItems((cur) => [...cur, ...fresh].slice(-3));

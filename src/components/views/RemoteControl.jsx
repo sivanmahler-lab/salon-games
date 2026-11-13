@@ -1,5 +1,5 @@
 import React from "react";
-import { Play, Pause, SkipForward, ThumbsUp, ArrowLeft, Home, Trophy, Sparkles, RefreshCw, Stethoscope } from "lucide-react";
+import { Play, Pause, SkipForward, ThumbsUp, ArrowLeft, Home, Trophy, Sparkles, RefreshCw, Stethoscope, Check } from "lucide-react";
 import { COLORS, GAME_DEFS } from "../../constants/theme";
 import { Btn, Avatar } from "../common/UIComponents";
 import PlayersPanel from "../common/PlayersPanel";
@@ -157,7 +157,7 @@ function RemoteInner({ room, dispatch, onClose }) {
             </>
           )}
           {["check", "write", "vote"].includes(L.phase) && <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP" })}>🔄 החלפת מילה</Btn>}
-          {L.phase === "result" && <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_NEXT" })}>מילה הבאה</Btn>}
+          {L.phase === "result" && <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_NEXT" })}>סיבוב נוסף</Btn>}
         </div>
         <Btn full variant="ghost" className="shrink-0" onClick={back}><Home size={18} /> מרכז המשחקים</Btn>
       </div>
@@ -187,8 +187,19 @@ function RemoteInner({ room, dispatch, onClose }) {
         {s.phase === "diagnose" && (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
             <p className="text-sm" style={{ color: COLORS.muted }}>הפסיכולוג מנסה לגלות את הכלל. רמזים: {s.clues}</p>
-            <Btn full variant="subtle" onClick={() => dispatch({ type: "SHRINK_REROLL" })}><RefreshCw size={18} /> לא בא לנו על הכלל, החליפו</Btn>
-            <Btn full variant="primary" onClick={() => dispatch({ type: "SHRINK_FINISH" })}><Trophy size={18} /> סיום הסיבוב</Btn>
+            {!s.found && (
+              <>
+                <Btn full variant="primary" onClick={() => dispatch({ type: "SHRINK_DIAGNOSE" })}><Check size={18} /> הצליח/ה לגלות את הכלל</Btn>
+                <Btn full variant="subtle" onClick={() => dispatch({ type: "SHRINK_REROLL" })}><RefreshCw size={18} /> לא בא לנו על הכלל, החליפו</Btn>
+                <Btn full variant="ghost" onClick={() => dispatch({ type: "SHRINK_FINISH" })}><Trophy size={18} /> סיום הסיבוב בלי גילוי</Btn>
+              </>
+            )}
+            {s.found && (
+              <>
+                <p className="text-sm font-bold" style={{ color: COLORS.emerald }}>🎉 הכלל התגלה ומוצג על המסך: {s.rule}</p>
+                <Btn full variant="primary" onClick={() => dispatch({ type: "SHRINK_AGAIN" })}><RefreshCw size={18} /> סיבוב נוסף</Btn>
+              </>
+            )}
           </div>
         )}
         {s.phase === "result" && (

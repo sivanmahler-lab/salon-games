@@ -181,12 +181,12 @@ export function PlayerAlias({ room, dispatch, myId }) {
 export function PlayerLexicon({ room, dispatch, myId }) {
   const L = room.lexicon;
   const entry = LEXICON[L.wordIdx] || { w: "", d: "" };
-  const [text, setText] = useState("");
+  const [text, setText] = useState(() => L.defs?.[myId] || "");
   const mine = L.defs?.[myId];
   const myVote = L.votes?.[myId];
   const gain = L.gains?.[myId] || 0;
   const roundKey = `${L.cursor}`;
-  useEffect(() => { setText(""); }, [roundKey]);
+  useEffect(() => { setText(L.defs?.[myId] || ""); }, [roundKey]); // a phone that reconnects gets its sent definition back, ready to fix
 
   const head = (
     <div className="shrink-0 text-center">
@@ -245,8 +245,12 @@ export function PlayerLexicon({ room, dispatch, myId }) {
           className="min-h-0 flex-1 resize-none rounded-2xl border-2 bg-transparent p-3 text-lg font-bold outline-none focus:border-[#a855f7]"
           style={{ borderColor: mine ? COLORS.emerald : COLORS.purple, color: COLORS.text }}
         />
-        <Btn full variant="primary" disabled={!text.trim()} onClick={() => dispatch({ type: "LEX_SUBMIT", id: myId, text })}>{mine ? "עדכון ההגדרה" : "שליחה"}</Btn>
-        {mine && <p className="shrink-0 text-center text-xs" style={{ color: COLORS.emerald }}>ההגדרה נשלחה ✓ אפשר לעדכן עד שכולם מסיימים</p>}
+        {mine && (
+          <p className="shrink-0 text-center text-sm font-bold" style={{ color: text.trim() === mine ? COLORS.emerald : COLORS.amber }}>
+            {text.trim() === mine ? "ההגדרה נשלחה ✓ אפשר לתקן אותה כאן עד שכולם שולחים" : "שינית את הנוסח. לחצו על 'שליחת התיקון' כדי לעדכן"}
+          </p>
+        )}
+        <Btn full variant="primary" disabled={!text.trim() || text.trim() === mine} onClick={() => dispatch({ type: "LEX_SUBMIT", id: myId, text })}>{mine ? "שליחת התיקון" : "שליחה"}</Btn>
         <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP", id: myId })}>🔄 החלפת מילה</Btn>
       </div>
     );
@@ -290,7 +294,7 @@ export function PlayerLexicon({ room, dispatch, myId }) {
         <div className="rounded-2xl border-2 p-4 text-base font-black" style={{ borderColor: COLORS.emerald, background: `${COLORS.emerald}1a`, color: COLORS.text }}>{entry.d}</div>
         <div className="text-lg font-black" style={{ color: gain ? COLORS.amber : COLORS.muted }}>{gain ? `קיבלת ${gain} ${gain === 1 ? "נקודה" : "נקודות"}` : "הפעם בלי נקודות"}</div>
       </div>
-      <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_NEXT" })}>מילה הבאה</Btn>
+      <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_NEXT" })}>סיבוב נוסף</Btn>
     </div>
   );
 }
@@ -357,8 +361,22 @@ export function PlayerShrink({ room, dispatch, myId }) {
   );
 }
 
+const SEAT_KEY = "salon-seat";
+const forgetSeat = () => { try { localStorage.removeItem(SEAT_KEY); } catch (e) { /* storage not available */ } };
+
 export default function PlayerApp({ roomCode, name, traits, onExit, onTakeover }) {
-  const [myId] = useState(() => generateId());
+  // The phone remembers who it is in this room, so opening the page again (screen went dark, new QR scan) returns to the same seat.
+  const [myId] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(SEAT_KEY) || "null");
+      if (saved && saved.code === normalizeRoomCode(roomCode) && saved.name === name && saved.id) return saved.id;
+      const id = generateId();
+      localStorage.setItem(SEAT_KEY, JSON.stringify({ code: normalizeRoomCode(roomCode), name, id }));
+      return id;
+    } catch (e) {
+      return generateId();
+    }
+  });
   const [room, setRoom] = useState(null);
   const [connecting, setConnecting] = useState(true);
   const [remote, setRemote] = useState(false);
@@ -423,7 +441,25 @@ export default function PlayerApp({ roomCode, name, traits, onExit, onTakeover }
   }, [roomCode]);
 
   const dispatch = useCallback((action) => channelRef.current?.send({ type: "ACTION", action }), []);
-  const leave = () => { channelRef.current?.send({ type: "ACTION", action: { type: "LEAVE", id: myId } }); setTimeout(onExit, 150); };
+  const leave = () => { forgetSeat(); channelRef.current?.send({ type: "ACTION", action: { type: "LEAVE", id: myId } }); setTimeout(onExit, 150); };
+
+  // Someone who left (or was removed) starts fresh the next time they join.
+  const gone = !!room?.left?.includes(myId);
+  useEffect(() => { if (gone) forgetSeat(); }, [gone]);
+
+  // Keep the phone screen on during the evening, so it does not go dark and disconnect. Does nothing where unsupported.
+  useEffect(() => {
+    let lock = null;
+    const keep = async () => {
+      try { if (!document.hidden && navigator.wakeLock) lock = await navigator.wakeLock.request("screen"); } catch (e) { /* not allowed right now */ }
+    };
+    keep();
+    document.addEventListener("visibilitychange", keep);
+    return () => {
+      document.removeEventListener("visibilitychange", keep);
+      try { lock?.release(); } catch (e) { /* already released */ }
+    };
+  }, []);
 
   if (!room) {
     return (
@@ -453,7 +489,7 @@ export default function PlayerApp({ roomCode, name, traits, onExit, onTakeover }
       <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col items-center justify-center gap-4 px-6 text-center">
         <Logo />
         <div className="text-lg font-black" style={{ color: COLORS.text }}>יצאת מהמשחק</div>
-        <p className="text-sm" style={{ color: COLORS.muted }}>המנחה הוציא/ה אותך מהחדר. אפשר להצטרף מחדש בסריקת ה-QR.</p>
+        <p className="text-sm" style={{ color: COLORS.muted }}>המנחה הוציא/ה אותך מהחדר, או שהתחברת מחדש ממסך אחר באותו שם. אפשר להצטרף מחדש בסריקת ה-QR.</p>
         <Btn variant="ghost" onClick={onExit}>חזרה</Btn>
       </div>
     );
