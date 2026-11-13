@@ -226,7 +226,6 @@ export function PlayerLexicon({ room, dispatch, myId }) {
         </div>
         <Btn full variant="primary" disabled={answered} onClick={() => dispatch({ type: "LEX_KNOW", id: myId, known: false })}>לא מכיר/ה</Btn>
         <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_KNOW", id: myId, known: true })}>מכיר/ה את המילה</Btn>
-        <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP", id: myId })}>🔄 החלפת מילה</Btn>
       </div>
     );
   }
@@ -247,11 +246,10 @@ export function PlayerLexicon({ room, dispatch, myId }) {
         />
         {mine && (
           <p className="shrink-0 text-center text-sm font-bold" style={{ color: text.trim() === mine ? COLORS.emerald : COLORS.amber }}>
-            {text.trim() === mine ? "ההגדרה נשלחה ✓ אפשר לתקן אותה כאן עד שכולם שולחים" : "שינית את הנוסח. לחצו על 'שליחת התיקון' כדי לעדכן"}
+            {text.trim() === mine ? "ההגדרה נשלחה ✓ אפשר לתקן אותה כאן עד שהמנחה חושף/ת את ההגדרות" : "שינית את הנוסח. לחצו על 'שליחת התיקון' כדי לעדכן"}
           </p>
         )}
         <Btn full variant="primary" disabled={!text.trim() || text.trim() === mine} onClick={() => dispatch({ type: "LEX_SUBMIT", id: myId, text })}>{mine ? "שליחת התיקון" : "שליחה"}</Btn>
-        <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP", id: myId })}>🔄 החלפת מילה</Btn>
       </div>
     );
   }
@@ -281,7 +279,6 @@ export function PlayerLexicon({ room, dispatch, myId }) {
           })}
         </div>
         <p className="shrink-0 text-center text-xs" style={{ color: myVote ? COLORS.emerald : COLORS.muted }}>{myVote ? "ההצבעה נקלטה ✓ אפשר לשנות" : "עוד לא הצבעת"}</p>
-        <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP", id: myId })}>🔄 החלפת מילה</Btn>
       </div>
     );
   }

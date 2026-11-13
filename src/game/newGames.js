@@ -56,7 +56,7 @@ export function imposterFinish(room, guess = null) {
 }
 
 /* ---- Boggle ---- */
-export const BOGGLE_SECONDS = 180;
+export const BOGGLE_SECONDS = 120;
 // Weighted by how often each letter appears in Hebrew words (final forms are shown as regular letters).
 const LETTER_WEIGHTS = { "ו": 10, "י": 11, "ה": 9, "א": 8, "ל": 8, "ר": 7, "ת": 7, "מ": 7, "ב": 6, "ש": 6, "נ": 5, "ע": 5, "ד": 4, "כ": 4, "ח": 3, "ק": 3, "פ": 3, "צ": 2, "ס": 2, "ג": 2, "ז": 2, "ט": 2 };
 const SOFIT = { "ך": "כ", "ם": "מ", "ן": "נ", "ף": "פ", "ץ": "צ" };
