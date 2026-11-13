@@ -238,6 +238,7 @@ export function HostBoggle({ room, dispatch, onBack }) {
   const B = room.boggle;
   const idx = boggleIndex(B);
     const gains = boggleScores(B);
+  const shown = room.players.find((p) => p.id === B.show);
   return (
     <div className={hostWrap}>
       <TopBar
@@ -247,7 +248,7 @@ export function HostBoggle({ room, dispatch, onBack }) {
         helpTitle="איך משחקים בבוגל"
         helpSteps={[
           "בלוח 16 אותיות. בטלפון מקישים על אותיות סמוכות (גם באלכסון), בלי להשתמש באותה משבצת פעמיים, כדי ליצור מילה של 3 אותיות לפחות.",
-          "יש 3 דקות. מילה שמצאו שני שחקנים או יותר נמחקת לכולם.",
+          "יש 2 דקות. מילה שמצאו שני שחקנים או יותר נמחקת לכולם.",
           "בסוף המנחה עובר על המילים ויכול למחוק מילה מפוקפקת בלחיצה עליה.",
           "ניקוד: 3-4 אותיות נקודה, 5 שתיים, 6 שלוש, 7 חמש, 8 ומעלה 11.",
         ]}
@@ -255,7 +256,7 @@ export function HostBoggle({ room, dispatch, onBack }) {
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 text-center">
         {B.phase === "ready" && (
           <>
-            <div className="text-2xl font-black" style={{ color: COLORS.text }}>מוכנים? 3 דקות</div>
+            <div className="text-2xl font-black" style={{ color: COLORS.text }}>מוכנים? 2 דקות</div>
             <p className="text-sm" style={{ color: COLORS.muted }}>הלוח יופיע בטלפונים ובמסך הזה בלחיצה. מילים של 3 אותיות לפחות.</p>
             <Btn variant="primary" onClick={() => dispatch({ type: "BOG_BEGIN" })}><Play size={18} /> התחלה</Btn>
           </>
@@ -274,24 +275,34 @@ export function HostBoggle({ room, dispatch, onBack }) {
         {B.phase === "review" && (
           <>
             <div className="shrink-0 text-lg font-black" style={{ color: COLORS.text }}>עוברים על המילים</div>
-            <p className="shrink-0 text-xs" style={{ color: COLORS.muted }}>לכל שחקן יש עמודה עם המילים שלו. מילה כפולה נמחקת אוטומטית. מילה מפוקפקת? לחצו עליה כדי למחוק אותה (ושוב כדי להחזיר).</p>
-            <div className="grid min-h-0 w-full flex-1 auto-cols-fr grid-flow-col gap-2 overflow-auto">
+            <p className="shrink-0 text-sm font-bold" style={{ color: COLORS.amber }}>לחצו על שם של שחקן כדי לראות את המילים שלו</p>
+            <div className="flex shrink-0 flex-wrap justify-center gap-2">
               {room.players.map((p) => (
-                <div key={p.id} className="flex min-h-0 min-w-[6.5rem] flex-col gap-1 overflow-y-auto rounded-xl border p-1.5" style={{ borderColor: COLORS.border, background: COLORS.surface }}>
-                  <div className="shrink-0 text-center text-xs font-black" style={{ color: COLORS.amber }}>{p.name} ({gains[p.id] || 0})</div>
-                  {[...(B.words[p.id] || [])].sort((a, b) => [...b].length - [...a].length || a.localeCompare(b, "he")).map((w) => {
-                    const shared = idx[w].length > 1;
-                    const removed = B.removed.includes(w);
-                    const dead = shared || removed;
-                    return (
-                      <button key={w} disabled={shared} onClick={() => dispatch({ type: "BOG_TOGGLE", word: w })} className="rounded-lg border px-2 py-0.5 text-sm font-bold" style={{ borderColor: removed ? COLORS.coral : COLORS.border, color: dead ? COLORS.muted : COLORS.text, textDecoration: dead ? "line-through" : "none" }}>
-                        {w} {shared && <span className="text-[10px]">כפול</span>}
-                      </button>
-                    );
-                  })}
-                  {(B.words[p.id] || []).length === 0 && <span className="text-center text-[11px]" style={{ color: COLORS.muted }}>אין מילים</span>}
-                </div>
+                <button key={p.id} onClick={() => dispatch({ type: "BOG_SHOW", id: p.id })} className="rounded-xl border-2 px-4 py-2 font-black" style={{ borderColor: B.show === p.id ? COLORS.amber : COLORS.border, background: B.show === p.id ? `${COLORS.amber}22` : COLORS.surface, color: COLORS.text }}>
+                  {p.name} <span className="text-sm" style={{ color: COLORS.muted }}>({(B.words[p.id] || []).length} מילים, {gains[p.id] || 0} נק')</span>
+                </button>
               ))}
+            </div>
+            <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto rounded-xl border p-2" style={{ borderColor: COLORS.border, background: COLORS.surface }}>
+              {!shown && <span className="m-auto text-sm" style={{ color: COLORS.muted }}>עוברים שחקן אחרי שחקן ודנים במילים שלו</span>}
+              {shown && (
+                <>
+                  <div className="shrink-0 text-xs" style={{ color: COLORS.muted }}>המילים של {shown.name}. מילה כפולה נמחקת אוטומטית. מילה לא תקינה? לחצו עליה כדי למחוק אותה (ושוב כדי להחזיר).</div>
+                  <div className="flex flex-wrap content-start justify-center gap-2">
+                    {[...(B.words[shown.id] || [])].sort((a, b) => [...b].length - [...a].length || a.localeCompare(b, "he")).map((w) => {
+                      const shared = idx[w].length > 1;
+                      const removed = B.removed.includes(w);
+                      const dead = shared || removed;
+                      return (
+                        <button key={w} disabled={shared} onClick={() => dispatch({ type: "BOG_TOGGLE", word: w })} className="rounded-lg border px-3 py-1 text-lg font-bold" style={{ borderColor: removed ? COLORS.coral : COLORS.border, color: dead ? COLORS.muted : COLORS.text, textDecoration: dead ? "line-through" : "none" }}>
+                          {w} {shared && <span className="text-[10px]">כפול</span>}
+                        </button>
+                      );
+                    })}
+                    {(B.words[shown.id] || []).length === 0 && <span className="text-sm" style={{ color: COLORS.muted }}>אין מילים</span>}
+                  </div>
+                </>
+              )}
             </div>
             <Btn variant="primary" onClick={() => dispatch({ type: "BOG_FINISH" })}><Trophy size={18} /> סיום וחישוב ניקוד</Btn>
           </>
@@ -425,7 +436,7 @@ export function RemoteNewGame({ room, dispatch, screen, back, wrap, header, Titl
       <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
         {B.phase === "ready" && <Btn full variant="primary" onClick={() => dispatch({ type: "BOG_BEGIN" })}>התחלה</Btn>}
         {B.phase === "play" && (<><div className="text-3xl font-black" style={{ color: COLORS.amber }}>{fmt(B.timeLeft)}</div><Btn full variant="ghost" onClick={() => dispatch({ type: "BOG_END" })}>סיום מוקדם</Btn></>)}
-        {B.phase === "review" && (<><p className="text-sm" style={{ color: COLORS.muted }}>מילים מפוקפקות מוחקים במסך הראשי</p><Btn full variant="primary" onClick={() => dispatch({ type: "BOG_FINISH" })}>סיום וחישוב ניקוד</Btn></>)}
+        {B.phase === "review" && (<><p className="text-sm" style={{ color: COLORS.muted }}>בחרו שחקן כדי להציג את המילים שלו במסך הראשי. מילים לא תקינות מוחקים שם.</p><div className="flex flex-wrap justify-center gap-2">{room.players.map((p) => <Btn key={p.id} variant={B.show === p.id ? "gold" : "ghost"} onClick={() => dispatch({ type: "BOG_SHOW", id: p.id })}>{p.name}</Btn>)}</div><Btn full variant="primary" onClick={() => dispatch({ type: "BOG_FINISH" })}>סיום וחישוב ניקוד</Btn></>)}
         {B.phase === "result" && <Btn full variant="primary" onClick={() => dispatch({ type: "BOG_NEXT" })}>סבב חדש</Btn>}
       </div>
       <Btn full variant="ghost" className="shrink-0" onClick={back}><Home size={18} /> מרכז המשחקים</Btn>

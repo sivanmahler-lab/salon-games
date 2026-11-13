@@ -142,18 +142,20 @@ function RemoteInner({ room, dispatch, onClose }) {
             <>
               <p className="text-sm" style={{ color: COLORS.muted }}>{Object.keys(L.seen || {}).length} מתוך {room.players.length} ענו "לא מכיר"</p>
               <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_START_WRITE" })}>מתחילים בלי לחכות לכולם</Btn>
+              {L.prev && <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_BACK_WORD" })}>↩ חזרה למילה הקודמת</Btn>}
             </>
           )}
           {L.phase === "write" && (
             <>
               <p className="text-sm" style={{ color: COLORS.muted }}>{Object.keys(L.defs).length} מתוך {room.players.length} שלחו הגדרה</p>
-              <Btn full variant="primary" disabled={Object.keys(L.defs).length < 1} onClick={() => dispatch({ type: "LEX_TO_VOTE" })}>עוברים להצבעה</Btn>
+              <Btn full variant="primary" disabled={Object.keys(L.defs).length < 1} onClick={() => dispatch({ type: "LEX_TO_VOTE" })}>חושפים את ההגדרות</Btn>
             </>
           )}
           {L.phase === "vote" && (
             <>
               <p className="text-sm" style={{ color: COLORS.muted }}>{Object.keys(L.votes).length} מתוך {room.players.length} הצביעו</p>
               <Btn full variant="primary" onClick={() => dispatch({ type: "LEX_REVEAL" })}>חשפו את התשובה</Btn>
+              <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_BACK_WRITE" })}>↩ חזרה לכתיבת ההגדרות</Btn>
             </>
           )}
           {["check", "write", "vote"].includes(L.phase) && <Btn full variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP" })}>🔄 החלפת מילה</Btn>}

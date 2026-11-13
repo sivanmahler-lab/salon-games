@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import { GAME_DEFS } from "../constants/theme";
 import { shuffle, buildCharacters, buildShrinkRule, buildAliasDeck } from "../data/datasets";
 import { LEXICON } from "../data/lexicon";
-import { newImposterRound, imposterToGuessOrResult, imposterFinish, newBoggleRound, wordOnBoard, normHeb, boggleScores } from "../game/newGames";
+import { newImposterRound, imposterToGuessOrResult, imposterFinish, newBoggleRound, wordOnBoard, normHeb, boggleScores, BOGGLE_SECONDS } from "../game/newGames";
 
 /* ----------------------------------------------------------------------------
    ROOM SYNC ADAPTER
@@ -123,9 +123,11 @@ function startTurnGameState(players, deck, seconds = 60) {
 /* ---- Lexicon (foreign word -> Hebrew meaning): each player invents a definition, everyone votes for the real one ---- */
 // Every round opens with a check: anyone who already knows the word says so and the word is swapped for a new one.
 // Only when everybody answers "I don't know it" does the writing start.
-function lexiconRound(deck, cursor, notice = null) {
+// `from` is the round being left: it is kept (without the deck) so the host can go back to that word.
+function lexiconRound(deck, cursor, notice = null, from = null) {
   const c = cursor % deck.length;
-  return { deck, cursor: c, wordIdx: deck[c], phase: "check", seen: {}, notice, defs: {}, options: [], votes: {}, gains: {} };
+  const prev = from ? { wordIdx: from.wordIdx, cursor: from.cursor, phase: from.phase, seen: from.seen, notice: from.notice, defs: from.defs, options: from.options, votes: from.votes, gains: from.gains } : null;
+  return { deck, cursor: c, wordIdx: deck[c], phase: "check", seen: {}, notice, defs: {}, options: [], votes: {}, gains: {}, prev };
 }
 function lexiconToVote(room) {
   const L = room.lexicon;
@@ -330,7 +332,7 @@ export function roomReducer(room, action) {
     /* ---- Boggle ---- */
     case "BOG_BEGIN": {
       const B = room.boggle;
-      return B && B.phase === "ready" ? { ...room, boggle: { ...B, phase: "play", timeLeft: 180 } } : room;
+      return B && B.phase === "ready" ? { ...room, boggle: { ...B, phase: "play", timeLeft: BOGGLE_SECONDS } } : room;
     }
     case "BOG_TICK": {
       const B = room.boggle;
@@ -348,6 +350,11 @@ export function roomReducer(room, action) {
       if (!B || B.phase !== "play" || !room.players.some((p) => p.id === action.id)) return room;
       const list = [...new Set((action.words || []).map(normHeb))].filter((w) => wordOnBoard(B.board, w)).slice(0, 200);
       return { ...room, boggle: { ...B, words: { ...B.words, [action.id]: list } } };
+    }
+    case "BOG_SHOW": { // review: whose words are open on the host screen (pressing the same name again closes them)
+      const B = room.boggle;
+      if (!B || B.phase !== "review") return room;
+      return { ...room, boggle: { ...B, show: B.show === action.id ? null : action.id } };
     }
     case "BOG_TOGGLE": {
       const B = room.boggle;
@@ -372,7 +379,7 @@ export function roomReducer(room, action) {
       const me = room.players.find((p) => p.id === action.id);
       if (!L || L.phase !== "check" || !me) return room;
       if (action.known) {
-        return { ...room, lexicon: lexiconRound(L.deck, L.cursor + 1, { word: LEXICON[L.wordIdx].w, by: me.name }) };
+        return { ...room, lexicon: lexiconRound(L.deck, L.cursor + 1, { word: LEXICON[L.wordIdx].w, by: me.name }, L) };
       }
       const seen = { ...L.seen, [action.id]: "no" };
       const next = { ...room, lexicon: { ...L, seen } };
@@ -395,9 +402,16 @@ export function roomReducer(room, action) {
       if (!L || L.phase !== "write" || !room.players.some((p) => p.id === action.id)) return room;
       const text = String(action.text || "").trim().slice(0, 120);
       if (!text) return room;
-      const defs = { ...L.defs, [action.id]: text };
-      const next = { ...room, lexicon: { ...L, defs } };
-      return room.players.every((p) => defs[p.id]) ? lexiconToVote(next) : next;
+      // No automatic move to the vote when everyone has sent: a definition can be fixed until the host reveals them.
+      return { ...room, lexicon: { ...L, defs: { ...L.defs, [action.id]: text } } };
+    }
+    case "LEX_BACK_WRITE": { // the host reopens the writing of the same word (definitions kept, votes dropped)
+      const L = room.lexicon;
+      return L && L.phase === "vote" ? { ...room, lexicon: { ...L, phase: "write", options: [], votes: {} } } : room;
+    }
+    case "LEX_BACK_WORD": { // the host returns to the previous word, exactly where it was left
+      const L = room.lexicon;
+      return L && L.prev ? { ...room, lexicon: { ...L, ...L.prev, prev: null } } : room;
     }
     case "LEX_TO_VOTE": {
       const L = room.lexicon;
@@ -417,16 +431,15 @@ export function roomReducer(room, action) {
       const L = room.lexicon;
       return L && L.phase === "vote" ? lexiconReveal(room) : room;
     }
-    case "LEX_SKIP": { // anyone can swap the word before the answer is revealed
+    case "LEX_SKIP": { // only the host swaps the word (players pressed it by mistake); a player who knows the word uses LEX_KNOW
       const L = room.lexicon;
-      if (!L || !["check", "write", "vote"].includes(L.phase)) return room;
-      const by = room.players.find((p) => p.id === action.id)?.name || "המנחה";
-      return { ...room, lexicon: lexiconRound(L.deck, L.cursor + 1, { word: LEXICON[L.wordIdx].w, by, swapped: true }) };
+      if (!L || action.id || !["check", "write", "vote"].includes(L.phase)) return room;
+      return { ...room, lexicon: lexiconRound(L.deck, L.cursor + 1, { word: LEXICON[L.wordIdx].w, by: "המנחה", swapped: true }, L) };
     }
     case "LEX_NEXT": {
       const L = room.lexicon;
       if (!L || L.phase !== "result") return room;
-      return { ...room, lexicon: lexiconRound(L.deck, L.cursor + 1) };
+      return { ...room, lexicon: lexiconRound(L.deck, L.cursor + 1, null, L) };
     }
 
     case "START_TURN": {

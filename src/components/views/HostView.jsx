@@ -361,6 +361,8 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
   const submitted = room.players.filter((p) => L.defs[p.id]);
   const voted = room.players.filter((p) => L.votes[p.id]);
   useBeepWhen(room.players.length > 0 && voted.length === room.players.length);
+  const allSent = room.players.length > 0 && submitted.length === room.players.length;
+  useBeepWhen(L.phase === "write" && allSent);
   const compact = L.phase === "vote" || L.phase === "result";
   const cardText = { fontSize: "clamp(0.7rem, min(3.6vw, 2.2vh), 1.05rem)", lineHeight: 1.25 };
 
@@ -392,7 +394,10 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
             <p className="text-sm" style={{ color: COLORS.muted }}>מי שמכיר/ה את המילה לוחצ/ת בטלפון על "מכיר". אם מישהו מכיר, מחליפים מילה. כשכולם לוחצים "לא מכיר", מתחילים.</p>
             <div className="text-lg font-black" style={{ color: COLORS.amber }}>{Object.keys(L.seen || {}).length} מתוך {room.players.length} ענו "לא מכיר"</div>
             <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_START_WRITE" })}>מתחילים בלי לחכות לכולם</Btn>
-            <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP" })}>🔄 החלפת מילה</Btn>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP" })}>🔄 החלפת מילה</Btn>
+              {L.prev && <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_BACK_WORD" })}>↩ חזרה למילה הקודמת ({LEXICON[L.prev.wordIdx].w})</Btn>}
+            </div>
           </>
         )}
         {L.phase === "write" && (
@@ -406,7 +411,8 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
                 </div>
               ))}
             </div>
-            <Btn variant="primary" disabled={submitted.length < 1} onClick={() => dispatch({ type: "LEX_TO_VOTE" })}><ArrowLeft size={18} /> כולם סיימו? עוברים להצבעה</Btn>
+            <p className="text-xs" style={{ color: COLORS.muted }}>אפשר לתקן הגדרה שנשלחה, עד שחושפים את ההגדרות</p>
+            <Btn variant="primary" disabled={submitted.length < 1} onClick={() => dispatch({ type: "LEX_TO_VOTE" })}><Eye size={18} /> {allSent ? "כולם שלחו ✓ חושפים את ההגדרות" : "לא מחכים לכולם? חושפים את ההגדרות"}</Btn>
             <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP" })}>🔄 החלפת מילה</Btn>
           </>
         )}
@@ -430,7 +436,10 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
               ))}
             </div>
             <Btn variant="primary" onClick={() => dispatch({ type: "LEX_REVEAL" })}><Eye size={18} /> חשפו את התשובה</Btn>
-            <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP" })}>🔄 החלפת מילה</Btn>
+            <div className="flex flex-wrap justify-center gap-2">
+              <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_BACK_WRITE" })}>↩ חזרה לכתיבת ההגדרות</Btn>
+              <Btn variant="ghost" onClick={() => dispatch({ type: "LEX_SKIP" })}>🔄 החלפת מילה</Btn>
+            </div>
           </>
         )}
 
