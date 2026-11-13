@@ -75,12 +75,13 @@ export function HostLobby({ room, dispatch, roomCode, onExit, kind = "tv" }) {
         <div className="flex flex-col gap-3 landscape:min-h-0">
           <section className="shrink-0">
             <div className="mb-2 text-sm font-bold" style={{ color: COLORS.muted }}>המשחקים שישוחקו הערב</div>
-            <div className="space-y-2">
+            {/* on a wide screen (TV) the games sit two in a row, so the players' names below always have room */}
+            <div className="grid gap-2 landscape:grid-cols-2 landscape:gap-1.5">
               {GAME_DEFS.map((g) => (
-                <div key={g.id} className="flex items-center gap-3 rounded-2xl border px-3.5 py-2 text-right" style={{ borderColor: g.color, background: `${g.color}1a` }}>
-                  <span className="flex-1">
+                <div key={g.id} className="flex min-w-0 items-center gap-3 rounded-2xl border px-3.5 py-2 text-right landscape:py-1" style={{ borderColor: g.color, background: `${g.color}1a` }}>
+                  <span className="min-w-0 flex-1">
                     <span className="block text-sm font-bold" style={{ color: COLORS.text }}>{g.title}</span>
-                    <span className="block text-xs" style={{ color: COLORS.muted }}>{g.desc}</span>
+                    <span className="block text-xs landscape:truncate" style={{ color: COLORS.muted }}>{g.desc}</span>
                   </span>
                 </div>
               ))}
@@ -94,7 +95,7 @@ export function HostLobby({ room, dispatch, roomCode, onExit, kind = "tv" }) {
             {room.players.length === 0 ? (
               <p className="text-xs" style={{ color: COLORS.muted }}>ממתינים שיצטרפו שחקנים מהטלפונים שלהם...</p>
             ) : (
-              <div className="grid flex-1 grid-cols-2 content-start gap-2 landscape:min-h-0 landscape:overflow-y-auto">
+              <div className="grid flex-1 grid-cols-2 content-start gap-2 landscape:min-h-0 landscape:grid-cols-3 landscape:overflow-y-auto">
                 {room.players.map((p, i) => (
                   <div key={p.id} className="flex items-center gap-2 rounded-2xl border p-2" style={{ borderColor: COLORS.border, background: COLORS.surface }}>
                     <Avatar index={i} name={p.name} />
