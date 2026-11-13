@@ -355,15 +355,16 @@ export function PlayerBoggle({ room, dispatch, myId }) {
           <div className="text-2xl font-black" style={{ color: B.timeLeft <= 15 ? COLORS.coral : COLORS.amber }}>{fmt(B.timeLeft)}</div>
           <div className="text-sm font-bold" style={{ color: COLORS.muted }}>{mine.length} מילים</div>
         </div>
-        <div className="flex shrink-0 justify-center"><BoardGrid board={B.board} size="min(78vw, 40vh)" onTap={tap} path={path} /></div>
+        {/* my words sit above the board, so they are always in sight (newest first) */}
+        <div className="flex h-[4.25rem] shrink-0 flex-wrap content-start gap-1.5 overflow-y-auto rounded-xl border p-1.5" style={{ borderColor: COLORS.border }} aria-label="המילים שלי">
+          {mine.length ? mine.map((w) => <span key={w} className="rounded-lg border px-2 py-0.5 text-sm font-bold" style={{ borderColor: COLORS.border, color: COLORS.text }}>{w}</span>) : <span className="m-auto text-xs font-bold" style={{ color: COLORS.muted }}>המילים שתוסיפו יופיעו כאן</span>}
+        </div>
+        <div className="flex min-h-0 flex-1 items-center justify-center"><BoardGrid board={B.board} size="min(78vw, 38vh)" onTap={tap} path={path} /></div>
         <div className="flex h-10 shrink-0 items-center justify-center text-3xl font-black" style={{ color: COLORS.text, fontFamily: "Rubik, sans-serif" }}>{word || <span className="text-sm font-bold" style={{ color: COLORS.muted }}>{msg || "הקישו על אותיות סמוכות"}</span>}</div>
         {word && msg && <div className="shrink-0 text-center text-xs font-bold" style={{ color: COLORS.coral }}>{msg}</div>}
         <div className="flex shrink-0 gap-2">
           <Btn full variant="ghost" onClick={() => { setPath([]); setMsg(""); }}>נקה</Btn>
           <Btn full variant="primary" disabled={!word} onClick={add}>הוסף</Btn>
-        </div>
-        <div className="flex min-h-0 flex-1 flex-wrap content-start gap-1.5 overflow-y-auto">
-          {mine.map((w) => <span key={w} className="rounded-lg border px-2 py-0.5 text-sm font-bold" style={{ borderColor: COLORS.border, color: COLORS.text }}>{w}</span>)}
         </div>
       </div>
     );

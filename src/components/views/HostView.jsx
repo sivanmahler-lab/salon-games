@@ -436,7 +436,7 @@ function HostLexiconPlay({ room, dispatch, onBack }) {
             <div className="flex flex-wrap justify-center gap-3 text-xs font-bold" style={{ color: COLORS.amber }}>
               {room.players.filter((p) => L.gains[p.id]).map((p) => <span key={p.id}>{p.name} +{L.gains[p.id]}</span>)}
             </div>
-            <Btn variant="primary" onClick={() => dispatch({ type: "LEX_NEXT" })}><ArrowLeft size={18} /> מילה הבאה</Btn>
+            <Btn variant="primary" onClick={() => dispatch({ type: "LEX_NEXT" })}><RefreshCw size={18} /> סיבוב נוסף</Btn>
           </>
         )}
       </div>
@@ -501,13 +501,19 @@ export function HostShrink({ room, dispatch, onBack }) {
             רמזים: {s.clues} {s.found && <Check size={16} color={COLORS.emerald} />}
           </div>
           {!s.found && (
-            <Btn variant="subtle" onClick={() => dispatch({ type: "SHRINK_REROLL" })}><RefreshCw size={16} /> לא בא לנו על הכלל הזה, החליפו כלל</Btn>
+            <>
+              <Btn variant="primary" onClick={() => dispatch({ type: "SHRINK_DIAGNOSE" })}><Check size={18} /> הצליח/ה לגלות את הכלל</Btn>
+              <Btn variant="subtle" onClick={() => dispatch({ type: "SHRINK_REROLL" })}><RefreshCw size={16} /> לא בא לנו על הכלל הזה, החליפו כלל</Btn>
+            </>
           )}
           {s.found && s.rule && (
-            <div className="rounded-2xl border-2 px-6 py-4" style={{ borderColor: COLORS.emerald, background: `${COLORS.emerald}22` }}>
-              <div className="text-sm font-bold" style={{ color: COLORS.emerald }}>🎉 {psych?.name} גילה/תה! הכלל היה</div>
-              <div className="text-2xl font-black" style={{ color: COLORS.text }}>{s.rule}</div>
-            </div>
+            <>
+              <div className="rounded-2xl border-2 px-6 py-4" style={{ borderColor: COLORS.emerald, background: `${COLORS.emerald}22` }}>
+                <div className="text-sm font-bold" style={{ color: COLORS.emerald }}>🎉 {psych?.name} גילה/תה! הכלל היה</div>
+                <div className="text-2xl font-black" style={{ color: COLORS.text }}>{s.rule}</div>
+              </div>
+              <Btn variant="primary" onClick={() => dispatch({ type: "SHRINK_AGAIN" })}><RefreshCw size={18} /> סיבוב נוסף</Btn>
+            </>
           )}
         </div>
       )}
@@ -626,7 +632,7 @@ export default function HostApp({ onExit, kind = "tv", resume = null }) {
       else localDispatch(msg.action);
       if (msg.action.type === "JOIN") {
         const before = roomRef.current.players.length;
-        const isNew = !roomRef.current.players.some((p) => p.id === msg.action.id);
+        const isNew = !roomRef.current.players.some((p) => p.id === msg.action.id || p.name.trim() === String(msg.action.name || "").trim());
         setTimeout(() => {
           ch.send({ type: "STATE", room: roomRef.current });
           if (isNew) notifyJoin(msg.action.name, roomCode, before + 1);
