@@ -36,9 +36,9 @@ export function HostLobby({ room, dispatch, roomCode, onExit, kind = "tv" }) {
         <div className="w-[92px]" />
       </div>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 content-start gap-4 overflow-y-auto landscape:grid-cols-2 landscape:content-stretch landscape:overflow-visible">
+      <div className="grid min-h-0 flex-1 grid-cols-1 content-start gap-4 overflow-y-auto landscape:grid-cols-2 landscape:grid-rows-[minmax(0,1fr)] landscape:content-stretch landscape:overflow-hidden">
         {/* Right side: how to join */}
-        <GlassCard className="flex flex-col items-center justify-center gap-2 text-center landscape:min-h-0">
+        <GlassCard className="flex flex-col items-center justify-center gap-2 text-center landscape:min-h-0 landscape:overflow-hidden">
           <QRCode text={joinUrl} />
           <div className="flex items-center gap-2">
             <div className="rounded-xl border px-4 py-2 text-xl font-black tracking-widest" style={{ borderColor: COLORS.border, color: COLORS.text, fontFamily: "Rubik, sans-serif" }}>
@@ -72,7 +72,7 @@ export function HostLobby({ room, dispatch, roomCode, onExit, kind = "tv" }) {
         </GlassCard>
 
         {/* Left side: the games and the players */}
-        <div className="flex flex-col gap-3 landscape:min-h-0">
+        <div className="flex flex-col gap-3 landscape:min-h-0 landscape:overflow-hidden">
           <section className="shrink-0">
             <div className="mb-2 text-sm font-bold" style={{ color: COLORS.muted }}>המשחקים שישוחקו הערב</div>
             {/* on a wide screen (TV) the games sit two in a row, so the players' names below always have room */}
@@ -88,7 +88,7 @@ export function HostLobby({ room, dispatch, roomCode, onExit, kind = "tv" }) {
             </div>
           </section>
 
-          <section className="flex flex-1 flex-col landscape:min-h-0">
+          <section className="flex flex-1 flex-col landscape:min-h-0 landscape:overflow-hidden">
             <div className="mb-2 flex shrink-0 items-center gap-2 text-sm font-bold" style={{ color: COLORS.muted }}>
               <Users size={16} /> מי הצטרף עד עכשיו ({room.players.length})
             </div>
