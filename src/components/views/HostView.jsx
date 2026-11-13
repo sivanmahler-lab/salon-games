@@ -59,7 +59,9 @@ export function HostLobby({ room, dispatch, roomCode, onExit, kind = "tv" }) {
               : "דפדפן בטלוויזיה: כדי לא להשתמש בשלט, הצטרפו מהטלפון ולחצו שם על \"שלט מנחה\"."}
           </p>
           {/* Opens the join screen (code already filled in) in a NEW tab, so this host tab, which holds the room, stays open.
-              Going "back" in this same tab would close the room, because the room only lives in this tab. */}
+              Going "back" in this same tab would close the room, because the room only lives in this tab.
+              Not shown in the TV browser: nobody plays from the TV itself. */}
+          {kind === "mirror" && (
           <a
             href={joinUrl}
             target="_blank"
@@ -69,6 +71,7 @@ export function HostLobby({ room, dispatch, roomCode, onExit, kind = "tv" }) {
           >
             <ExternalLink size={14} /> הצטרפות כשחקן מהמכשיר הזה (נפתח בלשונית חדשה)
           </a>
+          )}
         </GlassCard>
 
         {/* Left side: the games and the players */}
