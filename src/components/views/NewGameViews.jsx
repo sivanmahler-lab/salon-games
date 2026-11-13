@@ -394,17 +394,6 @@ export function PlayerBoggle({ room, dispatch, myId }) {
       </div>
       <div className="shrink-0 text-center text-2xl font-black" style={{ color: COLORS.emerald }}>{gain} נקודות</div>
       {B.phase === "result" && <Btn full variant="primary" onClick={() => dispatch({ type: "BOG_NEXT" })}>סבב חדש</Btn>}
-      <details className="shrink-0 rounded-xl border p-2" style={{ borderColor: COLORS.border }}>
-        <summary className="text-center text-sm font-bold" style={{ color: COLORS.text }}>הרשימות של כולם (לערעור)</summary>
-        <div className="mt-2 max-h-[30dvh] space-y-2 overflow-y-auto">
-          {room.players.map((p) => (
-            <div key={p.id} className="text-xs" style={{ color: COLORS.muted }}>
-              <span className="font-black" style={{ color: COLORS.amber }}>{p.name}: </span>
-              {(B.words[p.id] || []).map((w) => <span key={w} className="ml-1.5" style={{ textDecoration: (idx[w] || []).length > 1 || B.removed.includes(w) ? "line-through" : "none" }}>{w}</span>)}
-            </div>
-          ))}
-        </div>
-      </details>
     </div>
   );
 }
