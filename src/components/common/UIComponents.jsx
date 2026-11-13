@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useContext } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { HelpCircle, Home, LogOut } from "lucide-react";
+import { HelpCircle, Home, LogOut, Trophy, QrCode } from "lucide-react";
 import { COLORS, AVATAR_COLORS } from "../../constants/theme";
 
 export function GlowBG() {
@@ -149,11 +149,24 @@ export function HelpModal({ title, steps, onClose }) {
   );
 }
 
+// True on the host (TV) screen: there the top bar of every game carries the scoreboard, back-to-lobby and room-QR buttons.
+export const HostBarContext = React.createContext(false);
+export const openScores = () => window.dispatchEvent(new Event("salon-open-scores"));
+export const openPlayers = () => window.dispatchEvent(new Event("salon-open-players"));
+const barBtn = "flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold";
+
 export function TopBar({ title, onBack, backLabel, right, helpTitle, helpSteps }) {
   const [helpOpen, setHelpOpen] = useState(false);
+  const hostBar = useContext(HostBarContext);
   return (
-    <div className="mb-4 flex items-center justify-between">
-      {onBack ? (
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+      {hostBar ? (
+        <div className="flex flex-wrap items-center gap-1.5">
+          <button onClick={openScores} className={barBtn} style={{ color: COLORS.amber, background: COLORS.surfaceAlt }}><Trophy size={16} /> לוח התוצאות</button>
+          {onBack && <button onClick={onBack} className={barBtn} style={{ color: COLORS.text, background: COLORS.surfaceAlt }}><Home size={16} /> ללובי</button>}
+          <button onClick={openPlayers} className={barBtn} style={{ color: COLORS.text, background: COLORS.surfaceAlt }}><QrCode size={16} /> הצג QR לחדר</button>
+        </div>
+      ) : onBack ? (
         <button onClick={onBack} className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold" style={{ color: COLORS.muted, background: COLORS.surfaceAlt }}>
           {backLabel === "exit" ? <LogOut size={16} /> : <Home size={16} />}
           {backLabel === "exit" ? "עזיבת החדר" : "מרכז המשחקים"}
