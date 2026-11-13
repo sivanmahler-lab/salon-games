@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef, useReducer } from "react";
 import {
   Users, Sparkles, Timer, Trophy, RefreshCw, Home, ArrowLeft, LogOut,
-  ChevronLeft, Check, Copy, Stethoscope, DoorOpen, Eye, ExternalLink, Pause, Play, SkipForward, ThumbsUp,
+  ChevronLeft, Check, Copy, Stethoscope, DoorOpen, Eye, ExternalLink, Pause, Play, SkipForward, ThumbsUp, QrCode,
 } from "lucide-react";
 import { COLORS, CATEGORIES, GAME_DEFS } from "../../constants/theme";
 import { createRoomChannel, generateRoomCode, normalizeRoomCode, roomReducer, createInitialRoom } from "../../utils/roomSync";
-import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar, WinBanner } from "../common/UIComponents";
+import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar, WinBanner, HostBarContext, openPlayers } from "../common/UIComponents";
 import { Podium } from "./Podium";
 import PlayersPanel from "../common/PlayersPanel";
 import { notifyJoin } from "../../utils/notify";
@@ -148,9 +148,14 @@ function ImposterWordsButton({ room, dispatch }) {
 export function HostHub({ room, dispatch, onPodium, onLobby }) {
   const games = GAME_DEFS.filter((g) => room.enabledGames.includes(g.id));
   const anyScore = room.players.some((p) => p.score > 0 || p.correct > 0 || p.skips > 0 || p.diagnosed > 0);
+  const [impAsk, setImpAsk] = useState(false);
   return (
     <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 landscape:max-w-5xl">
-      <div className="mb-3 flex shrink-0 justify-center"><Logo /></div>
+      <div className="mb-3 flex shrink-0 items-center justify-between gap-2">
+        <button onClick={openPlayers} className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-semibold" style={{ color: COLORS.text, background: COLORS.surfaceAlt }}><QrCode size={16} /> הצג QR לחדר</button>
+        <Logo />
+        <div className="w-[92px]" />
+      </div>
       <GlassCard className="mb-3 shrink-0 text-center text-xs font-bold [@media(max-height:600px)]:hidden" style={{ color: COLORS.muted }}>
         {room.players.length} שחקנים מחוברים — המסך הזה הוא מסך המנחה, בלי סודות עליו 🙈
       </GlassCard>
@@ -163,7 +168,7 @@ export function HostHub({ room, dispatch, onPodium, onLobby }) {
             <button
               key={g.id}
               disabled={need3}
-              onClick={() => dispatch({ type: "START_GAME", game: g.id })}
+              onClick={() => (g.id === "imposter" ? setImpAsk(true) : dispatch({ type: "START_GAME", game: g.id }))}
               className={`flex w-full ${need3 ? "opacity-40" : ""} items-center gap-4 rounded-2xl border p-4 text-right transition-all active:scale-[0.98] landscape:flex-col landscape:justify-center landscape:text-center`}
               style={{ borderColor: COLORS.border, background: COLORS.surface }}
             >
@@ -179,8 +184,16 @@ export function HostHub({ room, dispatch, onPodium, onLobby }) {
           );
         })}
       </div>
-      {room.enabledGames.includes("imposter") && (
-        <div className="mt-2 shrink-0"><ImposterWordsButton room={room} dispatch={dispatch} /></div>
+      {/* "המתחזה" was chosen: start right away, or first add the group's own secret words */}
+      {impAsk && (
+        <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 backdrop-blur-sm md:items-center" onClick={() => setImpAsk(false)}>
+          <div onClick={(e) => e.stopPropagation()} className="flex w-full max-w-md flex-col gap-3 rounded-t-3xl border p-5 text-center md:rounded-3xl" style={{ background: COLORS.surface, borderColor: COLORS.border }}>
+            <div className="text-lg font-black" style={{ color: COLORS.text }}>המתחזה</div>
+            <Btn full variant="primary" onClick={() => { setImpAsk(false); dispatch({ type: "START_GAME", game: "imposter" }); }}><Play size={18} /> מתחילים</Btn>
+            <ImposterWordsButton room={room} dispatch={dispatch} />
+            <Btn full variant="ghost" onClick={() => setImpAsk(false)}>ביטול</Btn>
+          </div>
+        </div>
       )}
       <div className="mt-3 shrink-0">
         <Btn full variant="gold" disabled={!anyScore} onClick={onPodium}><Trophy size={18} /> לוח התוצאות</Btn>
@@ -684,12 +697,12 @@ export default function HostApp({ onExit, kind = "tv", resume = null }) {
   const turnKey = room.screen === "whoami" || room.screen === "alias" ? room.screen : null;
 
   return (
-    <>
+    <HostBarContext.Provider value={true}>
       <JoinLeaveToasts players={room.players} />
       {["hub", "whoami", "alias", "lexicon", "shrink", "imposter", "boggle", "podium"].includes(room.screen) && (
-        <PlayersPanel room={room} dispatch={localDispatch} joinUrl={joinUrl} roomCode={roomCode} gameKey={turnKey} onBack={room.screen === "hub" ? null : backToHub} onExit={onExit} />
+        <PlayersPanel room={room} dispatch={localDispatch} joinUrl={joinUrl} roomCode={roomCode} gameKey={turnKey} onBack={room.screen === "hub" ? null : backToHub} onExit={onExit} hideButton={room.screen !== "podium"} />
       )}
-      {["hub", "whoami", "alias", "lexicon", "shrink", "imposter", "boggle"].includes(room.screen) && <ScoreButton rows={room.players.map((p) => ({ name: p.name, score: p.score || 0 }))} />}
+      {["hub", "whoami", "alias", "lexicon", "shrink", "imposter", "boggle"].includes(room.screen) && <ScoreButton hideButton title="לוח התוצאות" rows={room.players.map((p) => ({ name: p.name, score: p.score || 0 }))} />}
       {room.screen === "lobby" && <HostLobby room={room} dispatch={localDispatch} roomCode={roomCode} onExit={onExit} kind={kind} />}
       {room.screen === "hub" && <HostHub room={room} dispatch={localDispatch} onPodium={() => localDispatch({ type: "GO_PODIUM" })} onLobby={() => localDispatch({ type: "BACK_TO_LOBBY" })} />}
       {room.screen === "whoami" && <HostWhoAmI room={room} dispatch={localDispatch} onBack={backToHub} />}
@@ -699,6 +712,6 @@ export default function HostApp({ onExit, kind = "tv", resume = null }) {
       {room.screen === "shrink" && <HostShrink room={room} dispatch={localDispatch} onBack={backToHub} />}
       {room.screen === "alias" && <HostAlias room={room} dispatch={localDispatch} onBack={backToHub} />}
       {room.screen === "podium" && <HostPodium room={room} dispatch={localDispatch} onExit={onExit} />}
-    </>
+    </HostBarContext.Provider>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Users, X, UserMinus, ArrowLeft, DoorOpen } from "lucide-react";
 import { COLORS } from "../../constants/theme";
 import { Btn, Avatar, QRCode } from "./UIComponents";
@@ -8,21 +8,30 @@ import { Btn, Avatar, QRCode } from "./UIComponents";
    - hand the turn to a specific player (turn games)
    - remove a player
    - end the game / close the room */
-export default function PlayersPanel({ room, dispatch, joinUrl, roomCode, gameKey, onBack, onExit }) {
+export default function PlayersPanel({ room, dispatch, joinUrl, roomCode, gameKey, onBack, onExit, hideButton = false }) {
   const [open, setOpen] = useState(false);
+  // On the host screen the button lives in the top bar ("הצג QR לחדר"), which opens this panel with an event.
+  useEffect(() => {
+    if (!hideButton) return undefined;
+    const h = () => setOpen(true);
+    window.addEventListener("salon-open-players", h);
+    return () => window.removeEventListener("salon-open-players", h);
+  }, [hideButton]);
   const [confirm, setConfirm] = useState(null);
   const g = gameKey ? room[gameKey] : null;
   const close = () => { setOpen(false); setConfirm(null); };
 
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className="fixed bottom-3 right-3 z-[65] flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold"
-        style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.text }}
-      >
-        <Users size={14} /> שחקנים / QR
-      </button>
+      {!hideButton && (
+        <button
+          onClick={() => setOpen(true)}
+          className="fixed bottom-3 right-3 z-[65] flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold"
+          style={{ borderColor: COLORS.border, background: COLORS.surface, color: COLORS.text }}
+        >
+          <Users size={14} /> שחקנים / QR
+        </button>
+      )}
       {open && (
         <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/70 backdrop-blur-sm md:items-center" onClick={close}>
           <div onClick={(e) => e.stopPropagation()} className="flex max-h-[92dvh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-t-3xl border p-5 md:rounded-3xl" style={{ background: COLORS.surface, borderColor: COLORS.border }}>

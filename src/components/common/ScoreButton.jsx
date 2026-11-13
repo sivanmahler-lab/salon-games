@@ -3,18 +3,27 @@ import { Trophy, X, Settings, Sun, Moon, Type, Volume2, VolumeX } from "lucide-r
 import { COLORS } from "../../constants/theme";
 
 /* A "ניקוד" button that floats on every screen and opens the current scores. */
-export default function ScoreButton({ rows, title = "הניקוד עכשיו", className = "" }) {
+export default function ScoreButton({ rows, title = "הניקוד עכשיו", className = "", hideButton = false }) {
   const [open, setOpen] = useState(false);
+  // On the host screen the button lives in the top bar, which opens this list with an event.
+  React.useEffect(() => {
+    if (!hideButton) return undefined;
+    const h = () => setOpen(true);
+    window.addEventListener("salon-open-scores", h);
+    return () => window.removeEventListener("salon-open-scores", h);
+  }, [hideButton]);
   const sorted = [...rows].sort((a, b) => b.score - a.score);
   return (
     <>
-      <button
-        onClick={() => setOpen(true)}
-        className={`fixed bottom-3 left-1/2 z-[66] flex -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold ${className}`}
-        style={{ borderColor: COLORS.amber, background: COLORS.surface, color: COLORS.amber }}
-      >
-        <Trophy size={14} /> ניקוד
-      </button>
+      {!hideButton && (
+        <button
+          onClick={() => setOpen(true)}
+          className={`fixed bottom-3 left-1/2 z-[66] flex -translate-x-1/2 items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] font-bold ${className}`}
+          style={{ borderColor: COLORS.amber, background: COLORS.surface, color: COLORS.amber }}
+        >
+          <Trophy size={14} /> ניקוד
+        </button>
+      )}
       {open && (
         <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 backdrop-blur-sm md:items-center" onClick={() => setOpen(false)}>
           <div onClick={(e) => e.stopPropagation()} className="flex max-h-[85dvh] w-full max-w-md flex-col gap-3 overflow-y-auto rounded-t-3xl border p-5 md:rounded-3xl" style={{ background: COLORS.surface, borderColor: COLORS.border }}>
