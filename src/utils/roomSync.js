@@ -458,6 +458,7 @@ export function roomReducer(room, action) {
       const key = action.game;
       const g = room[key];
       if (!g || g.phase !== "playing" || room.paused) return room; // the clock waits while paused
+      if (key === "whoami") return room; // "מי אני?" has no clock: one character per turn, for as long as it takes
       const timeLeft = g.timeLeft - 1;
       if (timeLeft <= 0) {
         const players = bankTurn(room, key);
@@ -469,12 +470,24 @@ export function roomReducer(room, action) {
       const key = action.game;
       const g = room[key];
       if (!g || g.phase !== "playing" || room.paused || action.cursor !== g.cursor) return room; // stale/duplicate tap guard
+      if (key === "whoami") {
+        // one character per turn: the answer (guessed or gave up) ends the turn
+        const ok = action.result === "correct";
+        const done = { ...g, correct: ok ? 1 : 0, skips: ok ? 0 : 1, won: null, last: { word: g.deck[g.cursor], ok } };
+        return { ...room, players: bankTurn({ ...room, whoami: done }, "whoami"), whoami: { ...done, phase: "turnEnd" } };
+      }
       if (key === "alias" && g.mode === "solo" && action.result === "correct") return room; // solo: must say who guessed (ALIAS_GUESS)
       const correct = g.correct + (action.result === "correct" ? 1 : 0);
       const skips = g.skips + (action.result === "skip" ? 1 : 0);
       const cursor = (g.cursor + 1) % g.deck.length;
       const won = key === "whoami" ? (action.result === "correct" ? { word: g.deck[g.cursor], n: (g.won?.n || 0) + 1 } : null) : undefined;
       return { ...room, [key]: { ...g, correct, skips, cursor, ...(won !== undefined ? { won } : {}) } };
+    }
+
+    case "WHO_SWAP": { // the host swaps a character nobody knows; the turn goes on, no points
+      const g = room.whoami;
+      if (!g || g.phase !== "playing" || room.paused || action.cursor !== g.cursor) return room;
+      return { ...room, whoami: { ...g, cursor: (g.cursor + 1) % g.deck.length } };
     }
 
     case "ALIAS_GUESS": {

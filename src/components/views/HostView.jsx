@@ -5,7 +5,7 @@ import {
 } from "lucide-react";
 import { COLORS, CATEGORIES, GAME_DEFS } from "../../constants/theme";
 import { createRoomChannel, generateRoomCode, normalizeRoomCode, roomReducer, createInitialRoom } from "../../utils/roomSync";
-import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar, WinBanner, HostBarContext, openPlayers } from "../common/UIComponents";
+import { Btn, GlassCard, Avatar, Logo, QRCode, TopBar, HostBarContext, openPlayers } from "../common/UIComponents";
 import { Podium } from "./Podium";
 import PlayersPanel from "../common/PlayersPanel";
 import { notifyJoin } from "../../utils/notify";
@@ -216,7 +216,7 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
 
   return (
     <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md flex-col overflow-hidden px-5 pb-4 pt-4 md:max-w-xl landscape:max-w-5xl">
-      <TopBar title={`${title} (מסך מנחה)`} onBack={onBack} right={g.phase === "playing" ? `⏱ ${g.timeLeft}` : ""} helpTitle={helpTitle} helpSteps={helpSteps} />
+      <TopBar title={`${title} (מסך מנחה)`} onBack={onBack} right={g.phase === "playing" && gameKey !== "whoami" ? `⏱ ${g.timeLeft}` : ""} helpTitle={helpTitle} helpSteps={helpSteps} />
       {teams && (
         <div className="flex shrink-0 justify-center gap-4 pt-1 text-sm font-black">
           {TEAM_NAMES.map((n, i) => (
@@ -241,25 +241,29 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
           {room.paused ? (
             <div className="flex w-full flex-col items-center gap-3 rounded-2xl border-2 p-5" style={{ borderColor: COLORS.amber, background: `${COLORS.amber}1a` }}>
               <div className="text-lg font-black" style={{ color: COLORS.amber }}>⏸ המשחק מושהה</div>
-              <p className="text-xs" style={{ color: COLORS.muted }}>בכל הטלפונים מופיע שלחצת PAUSE והשעון עומד.</p>
+              <p className="text-xs" style={{ color: COLORS.muted }}>{gameKey === "whoami" ? "בכל הטלפונים מופיע שלחצת PAUSE." : "בכל הטלפונים מופיע שלחצת PAUSE והשעון עומד."}</p>
               <Btn variant="gold" onClick={() => dispatch({ type: "SET_PAUSED", value: false })}><Play size={18} /> המשך</Btn>
             </div>
           ) : (
             <Btn variant="subtle" onClick={() => dispatch({ type: "SET_PAUSED", value: true })}><Pause size={18} /> PAUSE</Btn>
           )}
-          <div className="flex w-full items-center justify-center gap-6 text-sm font-bold">
-            <span style={{ color: COLORS.emerald }}>נכונות: {g.correct}</span>
-            <span style={{ color: COLORS.coral }}>דילוגים: {g.skips}</span>
-          </div>
-          {gameKey === "whoami" && <WinBanner won={g.won} />}
+          {gameKey !== "whoami" && (
+            <div className="flex w-full items-center justify-center gap-6 text-sm font-bold">
+              <span style={{ color: COLORS.emerald }}>נכונות: {g.correct}</span>
+              <span style={{ color: COLORS.coral }}>דילוגים: {g.skips}</span>
+            </div>
+          )}
           <div style={{ background: `${color}22`, borderColor: color }} className="w-full rounded-2xl border-2 border-dashed p-4">
             <div className="text-lg font-black" style={{ color: COLORS.text }}>{playingCopy(turnPlayer.name)}</div>
           </div>
           {gameKey === "whoami" && !room.paused && (
-            <div className="grid w-full grid-cols-2 gap-3">
-              <Btn variant="danger" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "skip", cursor: g.cursor })}><SkipForward size={18} /> דלג</Btn>
-              <Btn variant="primary" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "correct", cursor: g.cursor })}><ThumbsUp size={18} /> הצליח/ה!</Btn>
-            </div>
+            <>
+              <div className="grid w-full grid-cols-2 gap-3">
+                <Btn variant="danger" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "skip", cursor: g.cursor })}><SkipForward size={18} /> לא הצליח/ה</Btn>
+                <Btn variant="primary" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "correct", cursor: g.cursor })}><ThumbsUp size={18} /> הצליח/ה!</Btn>
+              </div>
+              <Btn variant="ghost" onClick={() => dispatch({ type: "WHO_SWAP", cursor: g.cursor })}><RefreshCw size={16} /> אף אחד לא מכיר את הדמות? החליפו דמות</Btn>
+            </>
           )}
           <p className="text-xs" style={{ color: COLORS.muted }}>{stampLabel}</p>
         </div>
@@ -269,19 +273,24 @@ export function HostTurnGame({ room, dispatch, gameKey, title, color, stampLabel
         <div className="flex flex-1 flex-col items-center justify-center gap-5 text-center">
           <Trophy size={44} color={COLORS.amber} />
           <div className="text-xl font-black" style={{ color: COLORS.text }}>
-            {gameKey === "alias" && g.mode === "solo"
-              ? `${turnPlayer.name} הסביר/ה ${g.correct} מילים שנוחשו נכון`
-              : `${turnPlayer.name} סיים/ה עם ${g.correct} נקודות!`}
+            {gameKey === "whoami"
+              ? (g.last?.ok ? `${turnPlayer.name} ניחש/ה נכון! נקודה אחת` : `${turnPlayer.name} לא ניחש/ה הפעם`)
+              : gameKey === "alias" && g.mode === "solo"
+                ? `${turnPlayer.name} הסביר/ה ${g.correct} מילים שנוחשו נכון`
+                : `${turnPlayer.name} סיים/ה עם ${g.correct} נקודות!`}
           </div>
+          {gameKey === "whoami" && g.last && <div className="text-lg font-bold" style={{ color: COLORS.amber }}>הדמות הייתה: {g.last.word}</div>}
           {gameKey === "alias" && g.mode === "solo" && (
             <div className="flex flex-wrap justify-center gap-2 text-sm font-bold" style={{ color: COLORS.amber }}>
               {room.players.filter((p) => g.guessed?.[p.id]).map((p) => <span key={p.id}>{p.name} +{g.guessed[p.id]}</span>)}
             </div>
           )}
-          <div className="flex gap-6">
-            <div><div className="text-2xl font-black" style={{ color: COLORS.emerald }}>{g.correct}</div><div className="text-xs" style={{ color: COLORS.muted }}>נכונות</div></div>
-            <div><div className="text-2xl font-black" style={{ color: COLORS.coral }}>{g.skips}</div><div className="text-xs" style={{ color: COLORS.muted }}>דילוגים</div></div>
-          </div>
+          {gameKey !== "whoami" && (
+            <div className="flex gap-6">
+              <div><div className="text-2xl font-black" style={{ color: COLORS.emerald }}>{g.correct}</div><div className="text-xs" style={{ color: COLORS.muted }}>נכונות</div></div>
+              <div><div className="text-2xl font-black" style={{ color: COLORS.coral }}>{g.skips}</div><div className="text-xs" style={{ color: COLORS.muted }}>דילוגים</div></div>
+            </div>
+          )}
           <Btn variant="primary" onClick={() => dispatch({ type: "NEXT_TURN", game: gameKey })}><ArrowLeft size={18} /> תור הבא: {nextPlayer.name}</Btn>
           <button onClick={onBack} className="text-xs font-bold" style={{ color: COLORS.muted }}>סיום המשחק וחזרה למרכז</button>
         </div>
@@ -304,8 +313,8 @@ export function HostWhoAmI({ room, dispatch, onBack }) {
       helpSteps={[
         "כל תור שייך לשחקן/ית אחד/ת — עכשיו זה מי שמוצג/ת למעלה.",
         "כשהתור מתחיל, הדמות הסודית מוצגת רק בטלפונים של שאר השחקנים — לא כאן ולא אצל המנחש/ת.",
-        "שאר השחקנים מתארים במילים, והמנחש/ת עונה בקול. המנחה לוחץ/ת כאן במסך על 'הצליח/ה!' או 'דלג'.",
-        "כפתורי 'הצליח/ה!' ו'דלג' נמצאים רק במסך המנחה, לא בטלפונים.",
+        "שאר השחקנים מתארים במילים, והמנחש/ת עונה בקול. אין שעון, ויש דמות אחת בלבד בכל תור.",
+        "המנחה לוחץ/ת כאן במסך על 'הצליח/ה!' (נקודה) או 'לא הצליח/ה', והתור עובר לשחקן הבא. הכפתורים נמצאים רק במסך המנחה, לא בטלפונים.",
       ]}
       readyCopy={(name) => `${name} לא יראה/תראה שום דבר במסך שלו/ה. שאר השחקנים יראו את הדמות בטלפונים שלהם ויתארו אותה.`}
       playingCopy={(name) => `ממתינים ש${name} ינחש/תנחש...`}
