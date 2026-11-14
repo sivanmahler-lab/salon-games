@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Timer, Trophy, ThumbsUp, SkipForward, Target, Stethoscope, Lightbulb, Award, Sparkles, Wifi, WifiOff, Pause } from "lucide-react";
 import { COLORS } from "../../constants/theme";
 import { createRoomChannel, generateId, normalizeRoomCode } from "../../utils/roomSync";
-import { Btn, GlassCard, Avatar, Logo, PartyCard, WinBanner } from "../common/UIComponents";
+import { Btn, GlassCard, Avatar, Logo, PartyCard } from "../common/UIComponents";
 import { Podium } from "./Podium";
 import RemoteControl from "./RemoteControl";
 import { PlayerImposter, PlayerBoggle } from "./NewGameViews";
@@ -35,7 +35,6 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
   const w = room.whoami;
   const turnPlayer = room.players[w.turnIdx];
   const isGuesser = turnPlayer?.id === myId;
-  useEndBeep(w.timeLeft, turnPlayer?.id === myId);
 
   if (w.phase === "ready") {
     return (
@@ -53,7 +52,8 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
     return (
       <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-4 landscape:gap-2 px-6 text-center">
         <Trophy size={36} color={COLORS.amber} />
-        <div className="text-lg font-black" style={{ color: COLORS.text }}>הסיבוב הזה הסתיים!</div>
+        <div className="text-lg font-black" style={{ color: COLORS.text }}>{w.last ? (w.last.ok ? `${turnPlayer.name} ניחש/ה נכון!` : `${turnPlayer.name} לא ניחש/ה הפעם`) : "הסיבוב הזה הסתיים!"}</div>
+        {w.last && <div className="text-base font-bold" style={{ color: COLORS.amber }}>הדמות הייתה: {w.last.word}</div>}
         <p className="text-sm" style={{ color: COLORS.muted }}>ממתינים שהמנחה יתחיל את התור הבא...</p>
       </div>
     );
@@ -63,25 +63,18 @@ export function PlayerWhoAmI({ room, dispatch, myId }) {
   if (isGuesser) {
     return (
       <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-6 landscape:gap-2 px-6 text-center">
-        <div className="text-2xl font-black" style={{ color: COLORS.amber }}>⏱ {w.timeLeft}</div>
-        <WinBanner won={w.won} />
         <div className="rounded-3xl border-2 border-dashed p-8" style={{ borderColor: COLORS.purple, background: `${COLORS.purple}1a` }}>
           <div className="text-lg font-black leading-relaxed" style={{ color: COLORS.text }}>
             כולם רואים את הדמות שלך חוץ ממך - התחל לנחש!
           </div>
         </div>
-        <div className="flex gap-6 text-sm font-bold">
-          <span style={{ color: COLORS.emerald }}>נכונות: {w.correct}</span>
-          <span style={{ color: COLORS.coral }}>דילוגים: {w.skips}</span>
-        </div>
+        <p className="text-sm" style={{ color: COLORS.muted }}>אין שעון. דמות אחת, עד שמנחשים.</p>
       </div>
     );
   }
 
   return (
     <div className="relative z-10 mx-auto flex h-[100dvh] max-w-md landscape:max-w-3xl flex-col items-center justify-center overflow-hidden py-3 gap-6 landscape:gap-2 px-6">
-      <div className="text-center text-lg font-black" style={{ color: COLORS.amber }}>⏱ {w.timeLeft}</div>
-      <WinBanner won={w.won} />
       <PartyCard big stampColor={COLORS.purple} stampLabel="מי אני?">{w.deck[w.cursor]}</PartyCard>
     </div>
   );

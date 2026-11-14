@@ -88,23 +88,28 @@ function RemoteInner({ room, dispatch, onClose }) {
         )}
         {g.phase === "playing" && (
           <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3">
-            <div className="text-4xl font-black" style={{ color: COLORS.amber }}>⏱ {g.timeLeft}</div>
-            <div className="flex gap-6 text-sm font-bold">
-              <span style={{ color: COLORS.emerald }}>נכונות: {g.correct}</span>
-              <span style={{ color: COLORS.coral }}>דילוגים: {g.skips}</span>
-            </div>
+            {screen !== "whoami" && (
+              <>
+                <div className="text-4xl font-black" style={{ color: COLORS.amber }}>⏱ {g.timeLeft}</div>
+                <div className="flex gap-6 text-sm font-bold">
+                  <span style={{ color: COLORS.emerald }}>נכונות: {g.correct}</span>
+                  <span style={{ color: COLORS.coral }}>דילוגים: {g.skips}</span>
+                </div>
+              </>
+            )}
             {room.paused ? (
               <Btn full variant="gold" onClick={() => dispatch({ type: "SET_PAUSED", value: false })}><Play size={18} /> המשך</Btn>
             ) : (
               <>
                 {screen === "whoami" ? (
                   <div className="grid w-full flex-1 grid-cols-2 gap-3">
-                    <Btn variant="danger" className="!text-lg" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "skip", cursor: g.cursor })}><SkipForward size={20} /> דלג</Btn>
+                    <Btn variant="danger" className="!text-lg" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "skip", cursor: g.cursor })}><SkipForward size={20} /> לא הצליח/ה</Btn>
                     <Btn variant="primary" className="!text-lg" onClick={() => dispatch({ type: "RESULT", game: "whoami", result: "correct", cursor: g.cursor })}><ThumbsUp size={20} /> הצליח/ה!</Btn>
                   </div>
                 ) : (
                   <p className="text-center text-xs" style={{ color: COLORS.muted }}>באליאס המסביר מסמן בטלפון שלו מי ניחש ("דלג" למילה אחרת).</p>
                 )}
+                {screen === "whoami" && <Btn full variant="ghost" onClick={() => dispatch({ type: "WHO_SWAP", cursor: g.cursor })}>🔄 החלפת דמות (אף אחד לא מכיר)</Btn>}
                 <Btn full variant="subtle" onClick={() => dispatch({ type: "SET_PAUSED", value: true })}><Pause size={18} /> PAUSE</Btn>
               </>
             )}
@@ -113,7 +118,7 @@ function RemoteInner({ room, dispatch, onClose }) {
         {g.phase === "turnEnd" && (
           <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
             <Trophy size={36} color={COLORS.amber} />
-            <div className="font-black" style={{ color: COLORS.text }}>{turnPlayer.name} סיים/ה עם {g.correct} נקודות</div>
+            <div className="font-black" style={{ color: COLORS.text }}>{screen === "whoami" && g.last ? `${turnPlayer.name} ${g.last.ok ? "ניחש/ה נכון" : "לא ניחש/ה"}. הדמות: ${g.last.word}` : `${turnPlayer.name} סיים/ה עם ${g.correct} נקודות`}</div>
             <Btn full variant="primary" onClick={() => dispatch({ type: "NEXT_TURN", game: screen })}><ArrowLeft size={18} /> תור הבא: {nextPlayer.name}</Btn>
           </div>
         )}
