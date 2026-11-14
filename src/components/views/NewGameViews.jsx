@@ -283,6 +283,9 @@ export function HostBoggle({ room, dispatch, onBack }) {
                 </button>
               ))}
             </div>
+            {/* the 16 letters stay on screen during the review, next to the words being discussed */}
+            <div className="flex min-h-0 w-full flex-1 items-stretch gap-3 portrait:flex-col portrait:items-center">
+            <div className="flex shrink-0 items-center justify-center"><BoardGrid board={B.board} size="min(34vw, 42vh)" /></div>
             <div className="flex min-h-0 w-full flex-1 flex-col gap-2 overflow-y-auto rounded-xl border p-2" style={{ borderColor: COLORS.border, background: COLORS.surface }}>
               {!shown && <span className="m-auto text-sm" style={{ color: COLORS.muted }}>עוברים שחקן אחרי שחקן ודנים במילים שלו</span>}
               {shown && (
@@ -303,6 +306,7 @@ export function HostBoggle({ room, dispatch, onBack }) {
                   </div>
                 </>
               )}
+            </div>
             </div>
             <Btn variant="primary" onClick={() => dispatch({ type: "BOG_FINISH" })}><Trophy size={18} /> סיום וחישוב ניקוד</Btn>
           </>
@@ -386,6 +390,7 @@ export function PlayerBoggle({ room, dispatch, myId }) {
   return (
     <div className={phoneWrap}>
       <div className="shrink-0 text-center text-lg font-black" style={{ color: COLORS.text }}>{B.phase === "result" ? "הסבב נגמר" : "המנחה עובר על המילים"}</div>
+      {B.phase === "review" && <div className="flex shrink-0 justify-center"><BoardGrid board={B.board} size="min(62vw, 30vh)" /></div>}
       <div className="flex min-h-0 flex-1 flex-wrap content-start justify-center gap-1.5 overflow-y-auto">
         {list.map((w) => {
           const dead = (idx[w] || []).length > 1 || B.removed.includes(w);
